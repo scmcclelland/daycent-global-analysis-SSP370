@@ -1,0 +1,257 @@
+# filename:    analysis_shap.R
+# created:     28 February 2024
+# updated:     15 August 2024
+# author:      S.C. McClelland
+# description: This file contains the supervised clustering analysis
+#-------------------------------------------------------------------------------
+# UPDATE ##
+
+# NOTE: not all variables described here | to be added at future date
+
+# Column Headers
+# cell: cell number
+# x: longitude
+# y: latitude
+# y_block: decade (mean annual + or - 5 years) or year (cumulative)
+# ssp: historical (no climate change), SSP1-2.6, SSP3-7.0
+# gcm: general circultion model from CMIP6
+# total_crop_area_ha: total crop area (maize, soybean, wheat) in grid cell
+
+# s_GHG: cumulative SOC + N2O differences
+# m_GHG: decadal mean annual SOC + N2O differences
+# s_SOC: cumulative SOC differences
+# m_SOC: decadal mean annual SOC differences
+# s_N2O: cumulative N2O (direct and indirect) differences
+# m_N2O: decadal mean annual N2O (direct and indirect) differences
+# s_dN2O: cumulative direct N2O differences
+# m_dN2O: decadal mean annual direct N2O differences
+# s_iN2O: cumulative indirect N2O differences
+# m_iN2O: decadal mean annual indirect N2O differences
+# s_cr_grain: cumulative crop yield differences
+# m_cr_grain: decadal mean annual crop yield differences
+
+# GHG units:
+# s_: Mg CO2-eq ha-1
+# m_: Mg CO2-eq ha-1 yr-1
+
+# grain units:
+# s_: g C m-2
+# m_: g C m-2 yr-1
+
+# Practices
+# res or residue (0G-0L-1T-1R)
+# ntill or no-tillage (0G-0L-0T-0R)
+# ntill-res or no-tillage + residue (0G-0L-0T-1R)
+# ccg or grass cover crop (1G-0L-1T-0R)
+# ccg-res or grass cover crop + residue (1G-0L-0T-1R)
+# ccl or legume cover crop (0G-1L-1T-0R)
+# ccl-res or legume cover crop + residue (0G-1L-1T-1R)
+# ccg-ntill or grass cover crop + no-tillage + residue (1G-0L-0T-1R)
+# ccl-ntill or legume cover crop + no-tillage + residue (0G-1L-0T-1R)
+#-------------------------------------------------------------------------------
+library(caret)
+library(data.table)
+library(factoextra)
+library(fastshap)
+library(ranger)
+library(rstudioapi)
+library(scales)
+library(sf)
+library(shapviz)
+library(stringr)
+library(terra)
+library(umap)
+#-------------------------------------------------------------------------------
+source('r/functions.R')
+#-------------------------------------------------------------------------------
+options(scipen = 999, digits = 4)
+options(rgl.printRglwidget = TRUE)
+base.path = dirname(getActiveDocumentContext()$path)
+base.path = str_split(base.path, '/r')
+base.path = as.character(base.path[[1]][1])
+data.path = paste(base.path, 'data/daycent-post-processed', sep = '/')
+out.path  = paste(base.path, 'data/analyis-output', sep = '/')
+#-------------------------------------------------------------------------------
+# LOAD RELATIVE DATA (response differences, relative to REF)
+#-------------------------------------------------------------------------------
+# GRASS COVER CROP, RESIDUE
+rel_ccg_res_flux_dt   = readRDS(paste(data.path, 'ensemble-relative-responses-weighted-mean-ccg-res.rds', sep = '/'))
+# LEGUME COVER CROP, RESIDUE
+rel_ccl_res_flux_dt   = readRDS(paste(data.path, 'ensemble-relative-responses-weighted-mean-ccl-res.rds', sep = '/'))
+# GRASS COVER CROP, NO-TILLAGE, RESIDUE
+rel_ccg_ntill_flux_dt = readRDS(paste(data.path, 'ensemble-relative-responses-weighted-mean-ccg-ntill.rds', sep = '/'))
+# LEGUME COVER CROP, NO-TILLAGE, RESIDUE
+rel_ccl_ntill_flux_dt = readRDS(paste(data.path, 'ensemble-relative-responses-weighted-mean-ccl-ntill.rds', sep = '/'))
+#-------------------------------------------------------------------------------
+# SOIL & CLIMATE DATA
+#------------------------------------------------------------------------------
+site_wth          = readRDS(paste(data.path, 'ensemble_site_climate_data_decadal.rds', sep = '/'))
+# REDUCE VARIABLES
+s_w_cols          = c('gridid', 'y_block', 'ssp', 'bio1', 'hist_bio1', 'bio12', 'hist_bio12',
+                      'ELEV', 'SOMC_sum_', 'SLBLKD', 'SLCLAY', 'SLSAND', 'SLPH')
+site_wth          = site_wth[, ..s_w_cols]
+# ENSEMBLE MEAN OVER TIME
+site_wth          = site_wth[, lapply(.SD, mean), .SDcols = s_w_cols[4:13], by = .(gridid, ssp)]
+#-------------------------------------------------------------------------------
+# MANAGEMENT DATA
+#------------------------------------------------------------------------------
+load(paste(data.path, 'input_table_by_gridid_crop_irr.RData', sep = '/'))
+input_cols        = c('gridid', 'crop', 'irr','fertN.amt', 'orgN.amt', 'res.rtrn.amt','frac_NH4', 'frac_NO3', 'frac_Urea')
+main_table        = main_table[, ..input_cols]
+main_table[, N.amt := fertN.amt + orgN.amt]
+in_mn_cols        = c('N.amt','fertN.amt', 'orgN.amt', 'res.rtrn.amt','frac_NH4', 'frac_NO3', 'frac_Urea')
+# gridid mean
+main_table        = main_table[, lapply(.SD, mean), .SDcols = in_mn_cols, by = .(gridid)]
+#-------------------------------------------------------------------------------
+# CONVERT Biomass Units: g C m-2 to kg ha-1 yr-1 or Mg ha-1
+#-------------------------------------------------------------------------------
+Mg_ha   = 100L
+C_gr    = 0.42 # Ma et al. 2018 | value for crop 'reproductive organs'
+C_res   = 0.49 # Phyllis2 database | value for all crops
+C_shoot = 0.43 # Ma et al. 2018 | value for crop 'stem'
+C_root  = 0.38 # Ma et al. 2018 | value for crop 'root'
+
+# CCG-RES
+rel_ccg_res_flux_dt[, s_cr_grain  := (s_cr_grain/Mg_ha)/C_gr]
+rel_ccg_res_flux_dt[, s_cr_residC := (s_cr_residC/Mg_ha)/C_res]
+rel_ccg_res_flux_dt[, s_cc_shootC := (s_cc_shootC/Mg_ha)/C_shoot]
+rel_ccg_res_flux_dt[, s_cc_rootC  := (s_cc_rootC/Mg_ha)/C_root]
+# CCL-RES
+rel_ccl_res_flux_dt[, s_cr_grain  := (s_cr_grain/Mg_ha)/C_gr]
+rel_ccl_res_flux_dt[, s_cr_residC := (s_cr_residC/Mg_ha)/C_res]
+rel_ccl_res_flux_dt[, s_cc_shootC := (s_cc_shootC/Mg_ha)/C_shoot]
+rel_ccl_res_flux_dt[, s_cc_rootC  := (s_cc_rootC/Mg_ha)/C_root]
+# CCG-NTILL-RES
+rel_ccg_ntill_flux_dt[, s_cr_grain  := (s_cr_grain/Mg_ha)/C_gr]
+rel_ccg_ntill_flux_dt[, s_cr_residC := (s_cr_residC/Mg_ha)/C_res]
+rel_ccg_ntill_flux_dt[, s_cc_shootC := (s_cc_shootC/Mg_ha)/C_shoot]
+rel_ccg_ntill_flux_dt[, s_cc_rootC  := (s_cc_rootC/Mg_ha)/C_root]
+# CCL-NTILL-RES
+rel_ccl_ntill_flux_dt[, s_cr_grain  := (s_cr_grain/Mg_ha)/C_gr]
+rel_ccl_ntill_flux_dt[, s_cr_residC := (s_cr_residC/Mg_ha)/C_res]
+rel_ccl_ntill_flux_dt[, s_cc_shootC := (s_cc_shootC/Mg_ha)/C_shoot]
+rel_ccl_ntill_flux_dt[, s_cc_rootC  := (s_cc_rootC/Mg_ha)/C_root]
+#-------------------------------------------------------------------------------
+# Greenhouse Gas and Yield Drivers
+#-------------------------------------------------------------------------------
+# CCG-RES (Grass cover crop, residue retention + conventional tillage)
+#-------------------------------------------------------------------------------
+# REDUCE DT
+  # mean response for nfix, soil C:N, sfdcmp, slcmp
+rel_ccg_res_flux_dt[, m_nfix       := mean(m_nfix), by = .(gridid, ssp)]
+rel_ccg_res_flux_dt[, m_sfdcmp     := mean(m_sfdcmp), by = .(gridid, ssp)]
+rel_ccg_res_flux_dt[, m_sldcmp     := mean(m_sldcmp), by = .(gridid, ssp)]
+# sum cover crop biomass
+rel_ccg_res_flux_dt[, s_cc_biomass := s_cc_shootC + s_cc_rootC]
+  # reduce columns
+drop_cols = c('m_cr_rootC','m_cr_shootC','m_cr_shootN','m_cr_grain','m_cr_grainN','m_cr_NPP',    
+  'm_cr_residC','m_cr_residN','s_cr_rootC','s_cr_shootC','s_cr_shootN', 
+  's_cr_grainN','s_cr_residN','m_cc_rootC','m_cc_shootC','m_cc_shootN',
+  's_cc_shootN','m_SOC','m_N2O','m_iN2O','m_dN2O','m_GHG', 'm_annet','m_sC.N','m_cr_irr',    
+  's_cr_irr','s_iN2O','s_dN2O','s_cc_shootC','s_cc_rootC', 's_cr_NPP')
+rel_ccg_res_flux_dt = rel_ccg_res_flux_dt[y_block == 2100, -..drop_cols] # final block
+rel_ccg_res_flux_dt = rel_ccg_res_flux_dt[ssp %in% 'ssp370'] #  REMOVE
+
+# JOIN SITE_WTH 
+ranger_dt     = rel_ccg_res_flux_dt[site_wth, on = .(gridid = gridid, ssp = ssp)]
+ranger_dt     = ranger_dt[!is.na(scenario)]
+# JOIN INPUT_DT
+ranger_dt     = ranger_dt[main_table, on = .(gridid = gridid)]
+ranger_dt     = ranger_dt[!is.na(scenario)]
+
+# RANDOM FOREST
+set.seed(1234)
+ranger_dt[, fertN.amt := NULL]
+ranger_dt[, orgN.amt  := NULL]
+ranger_dt[, s_cr_residC := NULL]
+
+ccg_res_GHG 
+# NOTE: SOC and N2O highly correlated (as expected) | consider removing
+
+
+# ccl_SOC   = soc_supervised_clustering(ranger_dt)
+# ccl_k_SOC = optimal_k(ccl_SOC$UMAP$layout, 5L, ccl_SOC$full_ranger_dt, ccl_SOC$reduced_ranger_dt)
+
+# SAVE
+# sv_dependence(ccl_SOC$viz, 'd_m_nfix', color_var = 'd_s_cr_residC')
+# save(ccl_SOC,  ccl_k_SOC,  file = paste(data.path, "ccl-syn-soc_SHAP.Rdata", sep = '/'))
+#-------------------------------------------------------------------------------
+# CCL-RES (Legume cover crop, residue retention + conventional tillage)
+#-------------------------------------------------------------------------------
+# REDUCE DT
+# mean response for nfix, soil C:N, sfdcmp, slcmp
+rel_ccl_res_flux_dt[, m_nfix       := mean(m_nfix), by = .(gridid, ssp)]
+rel_ccl_res_flux_dt[, m_sfdcmp     := mean(m_sfdcmp), by = .(gridid, ssp)]
+rel_ccl_res_flux_dt[, m_sldcmp     := mean(m_sldcmp), by = .(gridid, ssp)]
+# sum cover crop biomass
+rel_ccl_res_flux_dt[, s_cc_biomass := s_cc_shootC + s_cc_rootC]
+# reduce columns
+drop_cols = c('m_cr_rootC','m_cr_shootC','m_cr_shootN','m_cr_grain','m_cr_grainN','m_cr_NPP',    
+              'm_cr_residC','m_cr_residN','s_cr_rootC','s_cr_shootC','s_cr_shootN', 
+              's_cr_grainN','s_cr_residN','m_cc_rootC','m_cc_shootC','m_cc_shootN',
+              's_cc_shootN','m_SOC','m_N2O','m_iN2O','m_dN2O','m_GHG', 'm_annet','m_sC.N','m_cr_irr',    
+              's_cr_irr','s_iN2O','s_dN2O','s_cc_shootC','s_cc_rootC', 's_cr_NPP')
+rel_ccl_res_flux_dt = rel_ccl_res_flux_dt[y_block == 2100, -..drop_cols] # final block
+rel_ccl_res_flux_dt = rel_ccl_res_flux_dt[ssp %in% 'ssp370'] #  REMOVE
+
+# JOIN SITE_WTH 
+ranger_dt     = rel_ccl_res_flux_dt[site_wth, on = .(gridid = gridid, ssp = ssp)]
+ranger_dt     = ranger_dt[!is.na(scenario)]
+# JOIN INPUT_DT
+ranger_dt     = ranger_dt[main_table, on = .(gridid = gridid)]
+ranger_dt     = ranger_dt[!is.na(scenario)]
+
+# RANDOM FOREST
+set.seed(1234)
+ranger_dt[, fertN.amt := NULL]
+ranger_dt[, orgN.amt  := NULL]
+ranger_dt[, s_cr_residC := NULL]
+ranger_dt[, s_SOC       := NULL] # for now
+ranger_dt[, s_N2O       := NULL] # for now
+
+ccl_res_GHG = ghg_supervised_clustering(ranger_dt)
+# SAVE
+
+#-------------------------------------------------------------------------------
+# SUPERVISED CLUSTERING YIELD | Grass cover crop, residue retention + conventional tillage
+#-------------------------------------------------------------------------------
+# mean response for nfix, soil C:N, sfdcmp, slcmp
+rel_ccg_res_flux_dt[, m_nfix       := mean(m_nfix), by = .(gridid, ssp)]
+rel_ccg_res_flux_dt[, m_sfdcmp     := mean(m_sfdcmp), by = .(gridid, ssp)]
+rel_ccg_res_flux_dt[, m_sldcmp     := mean(m_sldcmp), by = .(gridid, ssp)]
+# add cover crop responses
+rel_ccg_res_flux_dt[, s_cc_biomass := s_cc_shootC + s_cc_rootC]
+# reduce columns
+drop_cols = c('m_cr_rootC','m_cr_shootC','m_cr_shootN','m_cr_grain','m_cr_grainN','m_cr_NPP',    
+              'm_cr_residC','m_cr_residN','s_cr_rootC','s_cr_shootC','s_cr_shootN', 
+              's_cr_grainN','s_cr_residN','m_cc_rootC','m_cc_shootC','m_cc_shootN',
+              's_cc_shootN','m_SOC','m_N2O','m_iN2O','m_dN2O','m_GHG', 'm_annet','m_sC.N','m_cr_irr',    
+              's_cr_irr','s_iN2O','s_dN2O','s_GHG','s_cc_shootC','s_cc_rootC', 's_cr_NPP')
+# take out N2O?
+rel_ccg_res_flux_dt = rel_ccg_res_flux_dt[y_block == 2100, -..drop_cols]
+rel_ccg_res_flux_dt = rel_ccg_res_flux_dt[ssp %in% 'ssp370'] #  REMOVE
+
+# JOIN SITE_WTH 
+ranger_dt     = rel_ccg_res_flux_dt[site_wth, on = .(gridid = gridid, ssp = ssp)]
+ranger_dt     = ranger_dt[!is.na(scenario)]
+# JOIN INPUT_DT
+ranger_dt     = ranger_dt[main_table, on = .(gridid = gridid)]
+ranger_dt     = ranger_dt[!is.na(scenario)]
+
+# RANDOM FOREST
+set.seed(1234)
+ranger_dt[, fertN.amt := NULL]
+ranger_dt[, orgN.amt  := NULL]
+# these tend to be highly correlated
+# s_cr_residC, s_SOC, frac_NO3, SLCLAY
+# remove:
+ranger_dt[, s_cr_residC := NULL]
+ranger_dt[, s_N2O     := NULL]
+ranger_dt[, frac_Urea := NULL]
+ranger_dt[, SLBLKD    := NULL]
+
+ccg_res_YIELD   = yield_CC_supervised_clustering(ranger_dt)
+ccg_res_k_YIELD = optimal_k(ccg_res_YIELD$UMAP$layout, 4L, ccg_res_YIELD$full_ranger_dt, ccg_res_YIELD$reduced_ranger_dt)
+
+# SAVE
+# save(ccg_res_YIELD,  ccg_res_k_YIELD,  file = paste(data.path, "ccg-res-yield_SHAP.Rdata", sep = '/'))
