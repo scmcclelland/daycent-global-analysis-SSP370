@@ -150,6 +150,8 @@ Uncertainty Scripts:
 
 -   uncertainty-somsc-script.R \| estimates uncertainty for soil C
 
+Before executing these scripts, files from /data/daycent-simulations need to be unzipped.
+
 The dN2O, iN2O, and somsc scripts are run from the command line. One argument is required to execute corresponding to the scenario. This is a selection of 'conv,' 'ccg-res,' 'ccg-ntill,' 'ccl-res,' or 'ccl-ntill.'
 
 Example: \> Rscript uncertainty-dN2O-script.R conv
