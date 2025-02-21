@@ -1,6 +1,6 @@
 # filename: impute-missing-uncertainty.R
 # created:     18 December 2024
-# updated:     18 December 2024
+# updated:     21 February 2025
 # author:      S.C. McClelland
 # description: This file imputes missing grid cells based on uncertainty data for GHG responses
 #              only. This data is used when estimating global mitigation potential.
@@ -39,6 +39,7 @@ crop_r          = rast(paste(data_p, 'msw-masked-cropland-rf-ir-area.tif', sep =
 country.sf      = st_read(paste(data_p, 'shp/WB_countries_Admin0_10m.shp', sep = '/'))
 }
 {
+### These should be loaded and executed one at a time because of file size ###
   ## uncertainty dt ##
 # uncertainty_dt = loadRData(paste(data_p, 'ccg-res-ghg-flux-uncertainty.RData', sep = '/'))
 # uncertainty_dt = loadRData(paste(data_p, 'ccl-res-ghg-flux-uncertainty.RData', sep = '/'))

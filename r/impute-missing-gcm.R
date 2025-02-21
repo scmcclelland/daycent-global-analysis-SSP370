@@ -1,6 +1,6 @@
 # filename: impute-missing-uncertainty.R
 # created:     18 December 2024
-# updated:     18 December 2024
+# updated:     21 February 2025
 # author:      S.C. McClelland
 # description: This file imputes missing grid cells based on climate variant data for yield responses
 #              only. This data is used when estimating global mitigation potential.
@@ -39,6 +39,7 @@ crop_r          = rast(paste(data_p, 'msw-masked-cropland-rf-ir-area.tif', sep =
 country.sf      = st_read(paste(data_p, 'shp/WB_countries_Admin0_10m.shp', sep = '/'))
 }
 {
+### These should be loaded and executed one at a time because of file size ###
   ## uncertainty dt ##
 # gcm_dt = loadRData(paste(data_p, 'ccg-res-yield.RData', sep = '/'))
 # gcm_dt = loadRData(paste(data_p, 'ccl-res-yield.RData', sep = '/'))
@@ -121,3 +122,64 @@ for (r in regions) {
     }
   }
 }
+#-----------------------------------------------------------------------------------------
+# ADD MISSING GCM ITERATIONS
+#-----------------------------------------------------------------------------------------
+# computes estimate for gridid, crop, irr with less than 24 gcm
+# estimate is the mean of gridid, crop, irr responses
+
+# add iteration
+gcm_dt[, iter := .GRP, by = gcm]
+
+# add counts
+gcm_dt[, count   := 1]
+gcm_dt[, count_s := lapply(.SD, sum),
+   .SDcols = 'count', 
+   by = .(gridid, crop, scenario, irr, ssp, y_block)]
+
+# create dt with < 24 gcm
+c_gcm_dt = gcm_dt[count_s < 24]
+
+# estimate mean response from actual gcm
+m_gcm_dt = c_gcm_dt[, lapply(.SD, mean),
+                    .SDcols = 'd_s_cgrain',
+                    by = .(gridid, crop, scenario, irr, ssp, y_block, IPCC_NAME)]
+setorder(m_gcm_dt, gridid, crop, irr, y_block)
+# identify missing iterations / gcm
+  # add gcms to header dt
+h_gcm_dt = unique(c_gcm_dt[, c('gridid', 'crop', 'irr','y_block')])
+h_gcm_dt[, key_r := 1]
+g        = data.table(gcm = unique(gcm_dt[,gcm]),
+                      key_r = 1)
+h_gcm_dt = h_gcm_dt[g, on = "key_r", allow.cartesian = TRUE][, key_r := NULL]
+setorder(h_gcm_dt, gridid, crop, irr, y_block)
+
+# join to return missing gcm names
+m_rep_gcm_dt = h_gcm_dt[!c_gcm_dt, on = .(gridid = gridid,
+                               crop    = crop,
+                               irr     = irr,
+                               gcm     = gcm,
+                               y_block = y_block)]
+# join with mean estimates and other cols
+m_gcm_dt = m_gcm_dt[m_rep_gcm_dt, on = .(gridid = gridid,
+                                         crop = crop,
+                                         irr = irr,
+                                         y_block = y_block)]
+# join with iteration number
+m_gcm_dt = m_gcm_dt[unique(gcm_dt[, c('gcm','iter')]), on = 'gcm']
+setorder(m_gcm_dt, gridid, crop, irr, y_block)
+
+# make column for rep name
+m_gcm_dt[, rep  := paste0('gcm_rep_',iter)]
+m_gcm_dt[, iter := NULL]
+m_gcm_dt[, gcm  := 'imputed']
+# order columns to append
+setcolorder(m_gcm_dt, c('gridid', 'crop', 'irr', 'scenario', 'ssp', 'gcm', 'y_block',  
+                        'IPCC_NAME', 'rep'))
+
+### Check that selected line matches scenario ###
+# SAVE AND APPEND to imputed dt
+# fwrite(m_gcm_dt, file = paste0(data_p, '/', 'ccg-res', '-yield-imputed.csv'), append = TRUE)
+# fwrite(m_gcm_dt, file = paste0(data_p, '/', 'ccl-res', '-yield-imputed.csv'), append = TRUE)
+# fwrite(m_gcm_dt, file = paste0(data_p, '/', 'ccg-ntill', '-yield-imputed.csv'), append = TRUE)
+fwrite(m_gcm_dt, file = paste0(data_p, '/', 'ccl-ntill', '-yield-imputed.csv'), append = TRUE)

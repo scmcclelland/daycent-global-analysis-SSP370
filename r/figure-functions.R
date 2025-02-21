@@ -1,14 +1,15 @@
 #filename: figure-functions.R
-
+# created:      18 November 2024
+# last updated: 21 February 2025
 #-----------------------------------------------------------------------------------------
 # figures-main
 #-----------------------------------------------------------------------------------------
   ## Figure 1. Scatterplot ##
-scatterplot_fig = function(dt, constant) {
-  scenario_lbl = c('ccg-res' = c('Grass CC + Res + Till'),
-                   'ccl-res' = c('Legume CC + Res + Till'), 
-                   'ccg-ntill' = c('Grass CC + Res + Ntill'),
-                   'ccl-ntill' = c('Legume CC + Res + Ntill'))
+scatterplot_fig = function(dt, constant_Pg, constant_Tg) {
+  scenario_lbl = c('ccg-res' = c('Grass CC'),
+                   'ccl-res' = c('Legume CC'), 
+                   'ccg-ntill' = c('Grass CC + Ntill'),
+                   'ccl-ntill' = c('Legume CC + Ntill'))
   dt$scenario  = factor(dt$scenario, levels = c('ccg-res', 'ccg-ntill', 'ccl-res', 'ccl-ntill'))
   ipcc_lbl     = c('GLB'   = c('GLOBE'),
                    'ADP'   = c('ADP'),
@@ -18,23 +19,33 @@ scatterplot_fig = function(dt, constant) {
                    'LAC'   = c('LAC'))
   dt$IPCC_NAME = factor(dt$IPCC_NAME, levels = c('GLB', 'ADP', 'AME', 'DEV', 'EEWCA', 'LAC'))
 
-  gg = ggplot(dt, aes(x = (s_GHG/constant), y = (s_grain/constant), color = IPCC_NAME, shape = scenario)) +
-    # Add points
-    geom_point(size = 2) +
+  glb_gg = ggplot(dt[IPCC_NAME == 'GLB'], aes(x = (s_GHG/constant_Pg), 
+                                              y = (s_grain/constant_Pg), 
+                                              color = IPCC_NAME, shape = scenario)) +
     # Add horizontal and vertical error bars
-    geom_errorbar(aes(ymin = (s_grain/constant) - (sd_s_grain/constant),
-                      ymax = (s_grain/constant) + (sd_s_grain/constant))) +
-    geom_errorbarh(aes(xmin = (s_GHG/constant) - (sd_s_GHG/constant),
-                       xmax = (s_GHG/constant) + (sd_s_GHG/constant))) +
-    scale_shape_manual(name = 'Scenario', labels = scenario_lbl, values = c(15,0,17,2)) +
-    scale_color_manual(name = 'Region', labels = ipcc_lbl, values = c("#913640","#040404","#4B4C40","#FFE9EA",
-                                                                               "#928261","#EAAD89")) +
+    geom_errorbar(aes(ymin = (s_grain/constant_Pg) - (se_s_grain/constant_Pg),
+                      ymax = (s_grain/constant_Pg) + (se_s_grain/constant_Pg)),
+                  width = 0,
+                  size  = 0.5,
+                  alpha = 0.8) +
+    geom_errorbarh(aes(xmin = (s_GHG/constant_Pg) - (se_s_GHG/constant_Pg),
+                       xmax = (s_GHG/constant_Pg) + (se_s_GHG/constant_Pg)),
+                   height = 0,
+                   size   = 0.5,
+                   alpha  = 0.8) +
+    # Add points
+    geom_point(size = 1.7) + # fill = 'white'
+    scale_shape_manual(name = 'Scenario', labels = scenario_lbl, 
+                       values = c(15,19,17,3)) +
+    scale_color_manual(name = 'Region', labels = ipcc_lbl, 
+                       values = c("#913640","#040404","#4B4C40",
+                                           "#CC79A7", "#928261","#EAAD89")) +
     # Add reference lines at x=0 and y=0 
     geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
     geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
     # Set coordinate limits
-    xlim(-1.2, 1.2) +
-    ylim(-0.5, 0.5) +
+    xlim(-0.25, 1.0) +
+    ylim(-0.25, 0.3) +
     xlab((expression(atop(paste(Annual~GHG~Mitigation~Potential), '('*Pg~CO[2]*-eq*~yr^-1*')')))) +
     ylab((expression(atop(paste(Annual~Yield~Difference), '('*Pg~yr^-1*')')))) +
     # Customize theme and labels
@@ -43,9 +54,52 @@ scatterplot_fig = function(dt, constant) {
           axis.text    = element_text(size = 7, color = 'black'),
           strip.text   = element_text(size = 6, color = 'black'),
           axis.title.x = element_text(size = 7),
-          legend.position  = 'right')
-  gg
-  return(gg)
+          legend.position  = 'right',
+          legend.justification = c(0, 0)) +
+    guides(color = guide_legend(override.aes = list(linetype = NULL)))
+  glb_gg
+  
+  reg_gg = ggplot(dt[!IPCC_NAME == 'GLB'], aes(x = (s_GHG/constant_Tg), 
+                                               y = (s_grain/constant_Tg), 
+                                               color = IPCC_NAME, shape = scenario)) +
+    # Add horizontal and vertical error bars
+    geom_errorbar(aes(ymin = (s_grain/constant_Tg) - (se_s_grain/constant_Tg),
+                      ymax = (s_grain/constant_Tg) + (se_s_grain/constant_Tg)),
+                  width = 0,
+                  size  = 0.5,
+                  alpha = 0.8) +
+    geom_errorbarh(aes(xmin = (s_GHG/constant_Tg) - (se_s_GHG/constant_Tg),
+                       xmax = (s_GHG/constant_Tg) + (se_s_GHG/constant_Tg)),
+                   height = 0,
+                   size   = 0.5,
+                   alpha  = 0.8) +
+    # Add points
+    geom_point(size = 1.7) + # fill = 'white'
+    scale_shape_manual(name = 'Scenario', labels = scenario_lbl, 
+                       values = c(15,19,17,3)) +
+    scale_color_manual(name = 'Region', labels = ipcc_lbl, 
+                       values = c("#040404","#4B4C40","#CC79A7",
+                                           "#928261","#EAAD89")) +
+    # Add reference lines at x=0 and y=0 
+    geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
+    geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+    # Set coordinate limits
+    xlim(-200, 500) +
+    ylim(-200, 200) +
+    xlab((expression(atop(paste(Annual~GHG~Mitigation~Potential), '('*Tg~CO[2]*-eq*~yr^-1*')')))) +
+    ylab((expression(atop(paste(Annual~Yield~Difference), '('*Tg~yr^-1*')')))) +
+    # Customize theme and labels
+    theme_bw() +
+    theme(text = element_text(color = 'black', size = 7),
+          axis.text    = element_text(size = 7, color = 'black'),
+          strip.text   = element_text(size = 6, color = 'black'),
+          axis.title.x = element_text(size = 7),
+          legend.position  = 'right',
+          legend.justification = c(0, 0)) +
+    guides(color = guide_legend(override.aes = list(linetype = NULL)))
+  reg_gg
+  
+  return(list(glb = glb_gg, reg = reg_gg))
 }
   ## Figure 2. Maps ##
 ghg_map_fig     = function(dt) {
@@ -285,11 +339,11 @@ feature_p      = function(feature_v, gg_features, gg_values, colors, groups) {
     xlab("Mean |SHAP Value|") +
     theme_bw() +
     theme(legend.position ='bottom',
-          text            = element_text(color = 'black', size = 6),
+          text            = element_text(color = 'black', size = 7),
           axis.title.y    = element_blank(),
-          axis.title.x    = element_blank(),
-          axis.text       = element_text(size = 6, color = 'black'),
-          strip.text      = element_text(size = 6, color = 'black'))
+          # axis.title.x    = element_blank(),
+          axis.text       = element_text(size = 7, color = 'black'),
+          strip.text      = element_text(size = 7, color = 'black'))
   return(feature_gg)
 }
   ## Figure 4. Partial dependence plots ##
@@ -325,7 +379,7 @@ cont_pdp = function(shv, sv_imp, color_hex, ft_name, shv_name, lbl) {
       size = 7       # Match your other text size if needed
     )
   ) +
-    ggtitle(lbl)
+    ggtitle('', lbl)
 return(cont_gg)
 }
 cat_pdp  = function(shv, sv_imp, color_hex, ft_name, shv_name, lbl) {
@@ -360,11 +414,91 @@ cat_gg = cat_gg + theme(
     size = 7       # Match your other text size if needed
   )
 ) +
-  ggtitle(lbl)
+  ggtitle('', lbl)
 
   return(cat_gg)
 }
   ## Figure 5. Regional goals ##
+bmp_map             = function(dt) {
+  # set xy
+  dt_r = as.data.frame(dt, xy = TRUE)
+  setDT(dt_r)
+  
+  # update scenarios
+  dt_r[scenario %in% 'cp',        scenario := NA]
+  dt_r[scenario %in% 'ccg-res',   scenario := '2']
+  dt_r[scenario %in% 'ccl-res',   scenario := '3']
+  dt_r[scenario %in% 'ccg-ntill', scenario := '4']
+  dt_r[scenario %in% 'ccl-ntill', scenario := '5']
+  dt_r[, scenario := as.numeric(scenario)]
+  
+  dt_r = dt_r[!is.na(scenario)]
+  
+  # create raster
+  dt_r = as.data.frame(dt_r, xy = TRUE)
+  r                = rast(nrow = 360, ncol = 720, nlyr = 1, xmin = -180, xmax = 180, ymin = -90, ymax = 90)
+  crs(r)           = "epsg:4326"
+  # original projection
+  r_lat_scen = rast(res = 0.5, nlyr = 1, extent = ext(r), crs = crs(r)) 
+  r_lat_scen[[1]][dt_r$gridid] = dt_r$scenario
+  
+  names(r_lat_scen) = c('scenario')
+  # equal area projection
+  newcrs = "+proj=eck4 +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs"
+  # get new output dimensions
+  project(r_lat_scen, newcrs)
+  # dimensions  : 569, 1138, 1  (nrow, ncol, nlyr)
+  # resolution  : 29727.52, 29727.52  (x, y)
+  # extent      : -16921203, 16908719, -8454359, 8460601  (xmin, xmax, ymin, ymax)
+  r_newcrs   = rast(ncols = 1138, nrows = 569, nlyr = 1, xmin = -16921203, xmax = 16908719, ymin = -8454359, ymax = 8460601, crs = newcrs)
+  r_eckiv    = project(r_lat_scen, r_newcrs)
+  
+  r_eckiv_dt = as.data.frame(r_eckiv, cells = TRUE, xy = TRUE)
+  r_eckiv_dt = setDT(r_eckiv_dt)
+  r_eckiv_dt_GHG = r_eckiv_dt[,.(cell, x, y, scenario)]
+  r_eckiv_dt_GHG[, scenario := round(scenario, digits = 0)]
+  r_eckiv_dt_GHG[, scenario := as.character(scenario)]
+  
+  # create sf object
+  data(wrld_simpl)
+  wrld_simpl_sf = sf::st_as_sf(wrld_simpl)
+  wrld_simpl_sf_eckiv = st_transform(wrld_simpl_sf, crs = newcrs)
+  wrld_simpl_sf_eckiv = wrld_simpl_sf_eckiv[wrld_simpl_sf_eckiv$NAME != 'Antarctica',]
+  
+  small_islands       = wrld_simpl_sf[wrld_simpl_sf$AREA < 10000,]
+  remove              = c('Antigua and Barbuda', 'American Samoa', 'Barbados', 'Bermuda',
+                          'Bahamas', 'Solomon Islands', 'Cayman Islands', 'Comoros','Cook Islands', 'Cape Verde',
+                          'Dominica', 'Fiji','Falkland Islands (Malvinas)', 'Micronesia, Federated States of', 'Grenada',
+                          'New Caledonia', 'Niue', 'Anguilla','French Polynesia', 'Guam', 'Kiribati', 'Martinique','Maldives', 'Aruba', 'Northern Mariana Islands',
+                          'Faroe Islands', 'Mayotte', 'Mauritius','Aaland Islands', 'Norfolk Island', 'Cocos (Keeling) Islands',
+                          'Bouvet Island', 'French Southern and Antarctic Lands', 'Heard Island and McDonald Islands',
+                          'British Indian Ocean Territory', 'Christmas Island', 'Vanuatu','United States Minor Outlying Islands',
+                          'Nauru', 'Reunion', 'Saint Kitts and Nevis', 'Seychelles', 'Saint Lucia', 'Tokelau', 'Tonga',
+                          'Tuvalu','Saint Vincent and the Grenadines', 'British Virgin Islands', 'United States Virgin Islands',
+                          'Wallis and Futuna Islands', 'Samoa', 'Guadeloupe', 'Netherlands Antilles', 'Pitcairn Islands','
+                          Palau', 'Marshall Islands', 'Saint Pierre and Miquelon', 'Saint Helena', 'San Marino',
+                          'Turks and Caicos Islands', 'Svalbard', 'Saint Martin', 'Saint Barthelemy', 'South Georgia South Sandwich Islands',
+                          'Guernsey', 'Jersey')
+  wrld_simpl_sf_eckiv = wrld_simpl_sf_eckiv[!wrld_simpl_sf_eckiv$NAME %in% remove,]
+  colors = c('1' = "grey75", '2' = "#A75529", 
+             '3' = "#8B0069", '4' = "#9A9800", '5' = "#5DD291")
+  
+  # create maps
+  gg_BMP = ggplot() + 
+    geom_sf(data = wrld_simpl_sf_eckiv, fill = "grey75",
+            colour = "grey45", size = 0.2) +
+    theme_map() +
+    geom_tile(data = r_eckiv_dt_GHG[,.(cell, x, y, scenario)],
+              aes(x = x, y = y, fill = scenario)) +
+    scale_fill_manual(values = colors) +
+    theme(legend.position='none',
+          plot.margin = unit(c(0,0,-2,-1), "cm"),
+          panel.grid.major = element_blank())
+  gg_BMP
+  
+  gg_bmp = list(bmp = gg_BMP)
+  return(gg_bmp)
+}
 IPCC_map          = function(.lu_path, .shp_f, .raster) {
   country.sf    = st_read(paste(.lu_path, .shp_f, sep = '/'))
   country.sf_dt = setDT(as.data.frame(country.sf))
@@ -445,7 +579,7 @@ IPCC_map          = function(.lu_path, .shp_f, .raster) {
   country.sf    = st_transform(country.sf, crs = "+proj=eck4 +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs")
   country.sf    = merge(country.sf, crop_area_dt[, c("WB_NAME", "IPCC_NAME")], 
                         by.x = 'WB_NAME', by.y = 'WB_NAME', all.x = TRUE, sort = FALSE)
-  WB_colors     = c('ADP' = c("#040404"), 'AME' = c("#4B4C40"), 'DEV' = c("#FFE9EA"),
+  WB_colors     = c('ADP' = c("#040404"), 'AME' = c("#4B4C40"), 'DEV' = c("#CC79A7"),
                     'EEWCA' = c("#928261"), 'LAC' = c("#EAAD89"))
 
   map = ggplot() +
@@ -461,227 +595,11 @@ IPCC_map          = function(.lu_path, .shp_f, .raster) {
   gg_maps = list(IPCC = map)
   return(gg_maps)
 }
-bmp_regional_fig    = function(dt, reg, g, y, constant) {
-  dt_r = copy(dt)
-  dt_r = dt_r[IPCC_NAME %in% reg & goal %in% g & y_block %in% y,]
-  
-  scenario_lbl = c('ccg-res' = c('Grass CC + Res + Till'),     
-                   'ccl-res' = c('Legume CC + Res + Till'),    
-                   'ccg-ntill' = c('Grass CC + Res + Ntill'),  
-                   'ccl-ntill' = c('Legume CC + Res + Ntill'), 
-                   'cp'        = c('Continued Management'))    
-  dt$scenario  = factor(dt$scenario, levels = c('ccg-res', 'ccg-ntill', 'ccl-res', 'ccl-ntill', 'cp'))
-  
-  goal_lbl     = c('max-ghg'      = 'M', 
-                   'max-ghg-yc'   = 'C',
-                   'max-yield'    = 'M',
-                   'max-yield-gc' = 'C')
-
-  # GHG
-  gg_GHG = ggplot(dt_r[!scenario == 'cp'], aes(x = scenario, y = s_GHG/constant, fill = scenario)) +
-    geom_bar(stat = 'identity', position = position_dodge(), width = 0.8) +
-    geom_errorbar(aes(ymin = (s_GHG/constant) - (sd_s_GHG/constant), 
-                      ymax = (s_GHG/constant) + (sd_s_GHG/constant)), 
-                  width=.4, position=position_dodge(0.8)) +
-    geom_hline(yintercept = 0, color = "grey50") +
-    facet_grid(.~goal, labeller = as_labeller(goal_lbl)) +
-    scale_x_discrete(labels = scenario_lbl, limits = c('ccg-res', 'ccg-ntill',
-                                                       'ccl-res', 'ccl-ntill')) +
-    ylab((expression(atop(paste(Annual~GHG~Mitigation~Potential), '('*Tg~CO[2]*-eq*~yr^-1*')')))) +
-    scale_fill_manual(labels = scenario_lbl, values = c('ccg-res'   = "#8B0069",
-                                                        'ccl-res'   = "#A75529",
-                                                        'ccg-ntill' = "#9A9800", 
-                                                        'ccl-ntill' = "#5DD291",
-                                                        'cp'        = "#B0F4FA")) +
-    theme_bw() +
-    theme(legend.position = 'none',
-          text = element_text(color = 'grey30', size = 5),
-          axis.text    = element_text(size = 5, color = 'grey30'),
-          strip.text   = element_text(size = 5, color = 'grey30'),
-          axis.title.x = element_blank(),
-          axis.title.y = element_blank(),
-          axis.text.x  = element_blank(),
-          axis.ticks.x = element_blank(),
-          strip.background = element_rect(fill='transparent'),
-          panel.background = element_rect(fill='transparent'), #transparent panel bg
-          plot.background = element_rect(fill='transparent', color=NA), #transparent plot bg
-          legend.background = element_rect(fill='transparent'), #transparent legend bg
-          legend.box.background = element_rect(fill='transparent') #transparent legend panel
-    )
-  gg_GHG
-  
-  # yield 
-  gg_yield = ggplot(dt_r[!scenario == 'cp'], aes(x = scenario, y = s_grain/constant, fill = scenario)) +
-    geom_bar(stat = 'identity', position = position_dodge(), width = 0.8) +
-    geom_errorbar(aes(ymin = (s_grain/constant) - (sd_s_grain/constant), 
-                      ymax = (s_grain/constant) + (sd_s_grain/constant)), 
-                  width=.4, position=position_dodge(0.8)) +
-    geom_hline(yintercept = 0, color = "grey50") +
-    facet_grid(.~goal, labeller = as_labeller(goal_lbl)) +
-    scale_x_discrete(labels = scenario_lbl, limits = c('ccg-res', 'ccg-ntill',
-                                                       'ccl-res', 'ccl-ntill')) +
-    ylab((expression(atop(paste(Annual~Yield~Potential), '('*Tg~yr^-1*')')))) +
-    scale_fill_manual(labels = scenario_lbl, values = c('ccg-res'   = "#8B0069",
-                                                        'ccl-res'   = "#A75529",
-                                                        'ccg-ntill' = "#9A9800", 
-                                                        'ccl-ntill' = "#5DD291",
-                                                        'cp'        = "#B0F4FA")) +
-    theme_bw() +
-    theme(legend.position = 'none',
-          text = element_text(color = 'grey30', size = 5),
-          axis.text    = element_text(size = 5, color = 'grey30'),
-          strip.text   = element_text(size = 5, color = 'grey30'),
-          axis.title.x = element_blank(),
-          axis.title.y = element_blank(),
-          axis.text.x  = element_blank(),
-          axis.ticks.x = element_blank(),
-          strip.background = element_rect(fill='transparent'),
-          panel.background = element_rect(fill='transparent'), #transparent panel bg
-          plot.background = element_rect(fill='transparent', color=NA), #transparent plot bg
-          legend.background = element_rect(fill='transparent'), #transparent legend bg
-          legend.box.background = element_rect(fill='transparent') #transparent legend panel
-    )
-  gg_yield
-  
-  # hectares / stacked bplot 
-  gg_area = ggplot(dt_r, aes(fill = scenario, y = IPCC_NAME, x = m_hectares)) +
-    geom_bar(position = 'fill', stat = 'identity', width = 0.7) +
-    coord_flip() +
-    facet_grid(.~goal, labeller = as_labeller(goal_lbl)) +
-    xlab('Proportion of Cropland Area') +
-    scale_fill_manual(labels = scenario_lbl, values = c('ccg-res'   = "#8B0069",
-                                                        'ccl-res'   = "#A75529",
-                                                        'ccg-ntill' = "#9A9800", 
-                                                        'ccl-ntill' = "#5DD291",
-                                                        'cp'        = "#B0F4FA")) +
-    theme_bw() +
-    theme(legend.position = 'none',
-          text = element_text(color = 'grey30', size = 5),
-          axis.text    = element_text(size = 5, color = 'grey30'),
-          strip.text   = element_text(size = 5, color = 'grey30'),
-          axis.title.x = element_blank(),
-          axis.title.y = element_blank(),
-          axis.text.x  = element_blank(),
-          axis.ticks.x = element_blank(),
-          strip.background = element_rect(fill='transparent'),
-          panel.background = element_rect(fill='transparent'), #transparent panel bg
-          plot.background = element_rect(fill='transparent', color=NA), #transparent plot bg
-          legend.background = element_rect(fill='transparent'), #transparent legend bg
-          legend.box.background = element_rect(fill='transparent') #transparent legend panel
-            )
-  gg_area
-  
-  ggplots = list(GHG = gg_GHG, YIELD = gg_yield, AREA = gg_area)
-  return(ggplots)
-}
 #-----------------------------------------------------------------------------------------
 # figures-extended-data
 #-----------------------------------------------------------------------------------------
 # ghg_map_fig
 # yield_map_fig
-bmp_map             = function(dt) {
-  # set xy
-  dt_r = as.data.frame(dt, xy = TRUE)
-  setDT(dt_r)
-  
-  # update scenarios
-  dt_r[scenario %in% 'cp',        scenario := NA]
-  dt_r[scenario %in% 'ccg-res',   scenario := '2']
-  dt_r[scenario %in% 'ccl-res',   scenario := '3']
-  dt_r[scenario %in% 'ccg-ntill', scenario := '4']
-  dt_r[scenario %in% 'ccl-ntill', scenario := '5']
-  dt_r[, scenario := as.numeric(scenario)]
-  
-  dt_r = dt_r[!is.na(scenario)]
-  
-  # create raster
-  dt_r = as.data.frame(dt_r, xy = TRUE)
-  r                = rast(nrow = 360, ncol = 720, nlyr = 1, xmin = -180, xmax = 180, ymin = -90, ymax = 90)
-  crs(r)           = "epsg:4326"
-  # original projection
-  r_lat_scen = rast(res = 0.5, nlyr = 1, extent = ext(r), crs = crs(r)) 
-  r_lat_scen[[1]][dt_r$gridid] = dt_r$scenario
-  
-  names(r_lat_scen) = c('scenario')
-  # equal area projection
-  newcrs = "+proj=eck4 +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs"
-  # get new output dimensions
-  project(r_lat_scen, newcrs)
-  # dimensions  : 569, 1138, 1  (nrow, ncol, nlyr)
-  # resolution  : 29727.52, 29727.52  (x, y)
-  # extent      : -16921203, 16908719, -8454359, 8460601  (xmin, xmax, ymin, ymax)
-  r_newcrs   = rast(ncols = 1138, nrows = 569, nlyr = 1, xmin = -16921203, xmax = 16908719, ymin = -8454359, ymax = 8460601, crs = newcrs)
-  r_eckiv    = project(r_lat_scen, r_newcrs)
-  
-  r_eckiv_dt = as.data.frame(r_eckiv, cells = TRUE, xy = TRUE)
-  r_eckiv_dt = setDT(r_eckiv_dt)
-  r_eckiv_dt_GHG = r_eckiv_dt[,.(cell, x, y, scenario)]
-  r_eckiv_dt_GHG[, scenario := round(scenario, digits = 0)]
-  r_eckiv_dt_GHG[, scenario := as.character(scenario)]
-  
-  # create sf object
-  data(wrld_simpl)
-  wrld_simpl_sf = sf::st_as_sf(wrld_simpl)
-  wrld_simpl_sf_eckiv = st_transform(wrld_simpl_sf, crs = newcrs)
-  wrld_simpl_sf_eckiv = wrld_simpl_sf_eckiv[wrld_simpl_sf_eckiv$NAME != 'Antarctica',]
-  
-  small_islands       = wrld_simpl_sf[wrld_simpl_sf$AREA < 10000,]
-  remove              = c('Antigua and Barbuda', 'American Samoa', 'Barbados', 'Bermuda',
-                          'Bahamas', 'Solomon Islands', 'Cayman Islands', 'Comoros','Cook Islands', 'Cape Verde',
-                          'Dominica', 'Fiji','Falkland Islands (Malvinas)', 'Micronesia, Federated States of', 'Grenada',
-                          'New Caledonia', 'Niue', 'Anguilla','French Polynesia', 'Guam', 'Kiribati', 'Martinique','Maldives', 'Aruba', 'Northern Mariana Islands',
-                          'Faroe Islands', 'Mayotte', 'Mauritius','Aaland Islands', 'Norfolk Island', 'Cocos (Keeling) Islands',
-                          'Bouvet Island', 'French Southern and Antarctic Lands', 'Heard Island and McDonald Islands',
-                          'British Indian Ocean Territory', 'Christmas Island', 'Vanuatu','United States Minor Outlying Islands',
-                          'Nauru', 'Reunion', 'Saint Kitts and Nevis', 'Seychelles', 'Saint Lucia', 'Tokelau', 'Tonga',
-                          'Tuvalu','Saint Vincent and the Grenadines', 'British Virgin Islands', 'United States Virgin Islands',
-                          'Wallis and Futuna Islands', 'Samoa', 'Guadeloupe', 'Netherlands Antilles', 'Pitcairn Islands','
-                          Palau', 'Marshall Islands', 'Saint Pierre and Miquelon', 'Saint Helena', 'San Marino',
-                          'Turks and Caicos Islands', 'Svalbard', 'Saint Martin', 'Saint Barthelemy', 'South Georgia South Sandwich Islands',
-                          'Guernsey', 'Jersey')
-  wrld_simpl_sf_eckiv = wrld_simpl_sf_eckiv[!wrld_simpl_sf_eckiv$NAME %in% remove,]
-  colors = c('1' = "grey75", '2' = "#8B0069", 
-             '3' = "#A75529", '4' = "#9A9800", '5' = "#5DD291")
-
-  # create maps
-  gg_BMP = ggplot() + 
-    geom_sf(data = wrld_simpl_sf_eckiv, fill = "grey75",
-            colour = "grey45", size = 0.2) +
-    theme_map() +
-    geom_tile(data = r_eckiv_dt_GHG[,.(cell, x, y, scenario)],
-              aes(x = x, y = y, fill = scenario)) +
-    scale_fill_manual(values = colors) +
-    theme(legend.position='none',
-          plot.margin = unit(c(0,0,-2,-1), "cm"),
-          panel.grid.major = element_blank())
-  gg_BMP
-  
-  gg_bmp = list(bmp = gg_BMP)
-  return(gg_bmp)
-}
-bmp_legend          = function(labels, colors) {
-  # Create dummy data
-  dt = data.table(
-    x = 1:length(labels),
-    y = 1,
-    category = factor(labels, levels = labels)
-  )
-  
-  # Create plot with only legend
-  p = ggplot(dt, aes(x = x, y = y, fill = category)) +
-    geom_bar(stat = "identity") +
-    scale_fill_manual(values = colors) +
-    theme_bw() +
-    theme(legend.position = "bottom",
-          legend.title    = element_blank()) +
-    guides(fill = guide_legend(nrow = NULL, ncol = 2))
-  
-  # Extract just the legend
-  legend = cowplot::get_legend(p)
-  
-  # Return the legend as a grob
-  return(legend)
-}
 bmp_scatterplot_fig = function(dt, constant) {
   goal_lbl     = c('max-ghg'      = c('Maximum GHG Potential'),
                    'max-yield'    = c('Maximum Yield Potential'),
@@ -694,17 +612,17 @@ bmp_scatterplot_fig = function(dt, constant) {
     # Add points
     geom_point(size = 1.5) +
     # Add horizontal and vertical error bars
-    geom_errorbar(aes(ymin = (s_grain/constant) - (sd_s_grain/constant),
-                      ymax = (s_grain/constant) + (sd_s_grain/constant)), width = 0.02) +
-    geom_errorbarh(aes(xmin = (s_GHG/constant) - (sd_s_GHG/constant),
-                       xmax = (s_GHG/constant) + (sd_s_GHG/constant)), height = 0.01) +
-    scale_color_manual(name = 'Goal', labels = goal_lbl, values = c("#005E5E","#578B21","#E89E6B","#FFCEF4")) +
+    geom_errorbar(aes(ymin = (s_grain/constant) - (se_s_grain/constant),
+                      ymax = (s_grain/constant) + (se_s_grain/constant)), width = 0) +
+    geom_errorbarh(aes(xmin = (s_GHG/constant) - (se_s_GHG/constant),
+                       xmax = (s_GHG/constant) + (se_s_GHG/constant)), height = 0) +
+    scale_color_manual(name = 'Goal', labels = goal_lbl, values = c("#005E5E","#578B21","#E89E6B","#CC79A7")) +
                                                                                  
     geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
     geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
     # Set coordinate limits
-    xlim(-0.5, 1.5) +
-    ylim(-0.5, 0.5) +
+    xlim(-0.5, 1.25) +
+    ylim(-0.25, 0.5) +
     xlab((expression(atop(paste(Annual~GHG~Mitigation~Potential), '('*Pg~CO[2]*-eq*~yr^-1*')')))) +
     ylab((expression(atop(paste(Annual~Yield~Difference), '('*Pg~yr^-1*')')))) +
     # Customize theme and labels
@@ -713,12 +631,14 @@ bmp_scatterplot_fig = function(dt, constant) {
           axis.text    = element_text(size = 7, color = 'black'),
           strip.text   = element_text(size = 6, color = 'black'),
           axis.title.x = element_text(size = 7),
-          legend.position  = 'bottom') +
-    guides(fill = guide_legend(nrow = NULL, ncol = 2))
+          legend.position = "right",
+          legend.box.just = "left",
+          legend.justification = c(0, 0),
+          legend.box.margin = margin(0, 0, 0, 0)) +
+    guides(color = guide_legend(override.aes = list(linetype = NULL)))
   gg
   return(gg)
 }
-# bmp_region_fig
 #-----------------------------------------------------------------------------------------
 # figures-si
 #-----------------------------------------------------------------------------------------
@@ -913,10 +833,10 @@ cov_yield_map_fig   = function(dt) {
   return(gg_maps)
 }
 barplot_fig     = function(dt) {
-  scenario_lbl = c('ccg-res' = c('Grass CC + Res + Till'),
-                   'ccl-res' = c('Legume CC + Res + Till'), 
-                   'ccg-ntill' = c('Grass CC + Res + Ntill'),
-                   'ccl-ntill' = c('Legume CC + Res + Ntill'))
+  scenario_lbl = c('ccg-res' = c('Grass CC'),
+                   'ccl-res' = c('Legume CC'), 
+                   'ccg-ntill' = c('Grass CC + Ntill'),
+                   'ccl-ntill' = c('Legume CC + Ntill'))
   dt$scenario  = factor(dt$scenario, levels = c('ccg-res', 'ccg-ntill', 'ccl-res', 'ccl-ntill'))
   ipcc_lbl     = c('GLB'   = c('GLOBE'),
                    'ADP'   = c('ADP'),
@@ -929,16 +849,19 @@ barplot_fig     = function(dt) {
   gg1 = ggplot(dt, aes(x = scenario, y = d_s_GHG, group = interaction(scenario, IPCC_NAME), 
                        fill = IPCC_NAME)) +
     geom_bar(stat = 'identity', position = position_dodge(), width = 0.8) +
-    geom_errorbar(aes(ymin= d_s_GHG - sd_s_GHG, ymax = d_s_GHG + sd_s_GHG), 
+    geom_errorbar(aes(ymin= d_s_GHG - se_s_GHG, ymax = d_s_GHG + se_s_GHG), 
                   width=.4, position=position_dodge(0.8)) +
     coord_flip() +
     geom_hline(yintercept = 0) +
     scale_x_discrete(labels = scenario_lbl, limits = c('ccl-ntill','ccl-res', 
                                                        'ccg-ntill', 'ccg-res')) +
     ylab((expression(atop(paste(Annual~GHG~Mitigation~Potential), '('*Mg~CO[2]*-eq*~ha^-1*~yr^-1*')')))) +
-    scale_y_continuous(limits = c(-8,8), breaks = seq(-8,8, 1)) +
-    scale_fill_manual(name = 'Region', labels = ipcc_lbl, values = c("#913640","#040404","#4B4C40","#FFCEF4",
-                                                                              "#928261","#EAAD89")) +
+    scale_y_continuous(limits = c(-3,4), breaks = seq(-3,4, 0.5)) +
+    scale_fill_manual(name = 'Region', labels = ipcc_lbl, values = c("#913640","#040404",
+                                                                              "#4B4C40",
+                                                                              "#CC79A7",
+                                                                              "#928261",
+                                                                              "#EAAD89")) +
    theme_bw() +
     theme(text         = element_text(color = 'black', size = 7),
           axis.text    = element_text(size = 7, color = 'black'),
@@ -951,17 +874,20 @@ barplot_fig     = function(dt) {
   gg2 = ggplot(dt, aes(x = scenario, y = d_s_SOC, group = interaction(scenario, IPCC_NAME), 
                        fill = IPCC_NAME)) +
     geom_bar(stat = 'identity', position = position_dodge(), width = 0.8) +
-    geom_errorbar(aes(ymin= d_s_SOC - sd_s_SOC, ymax = d_s_SOC + sd_s_SOC), 
+    geom_errorbar(aes(ymin= d_s_SOC - se_s_SOC, ymax = d_s_SOC + se_s_SOC), 
                   width=.4, position=position_dodge(0.8)) +
     coord_flip() +
     geom_hline(yintercept = 0) +
     scale_x_discrete(labels = scenario_lbl, limits = c('ccl-ntill','ccl-res', 
                                                        'ccg-ntill', 'ccg-res')) +
     ylab((expression(atop(paste(Annual~SOC~Sequestration), '('*Mg~CO[2]*-eq*~ha^-1*~yr^-1*')')))) +
-    scale_y_continuous(limits = c(-8,8), breaks = seq(-8,8, 1)) +
-    scale_fill_manual(name = 'Region', labels = ipcc_lbl, values = c("#913640","#040404","#4B4C40","#FFCEF4",
-                                                                              "#928261","#EAAD89")) +
-                                                                                theme_bw() +
+    scale_y_continuous(limits = c(0,5), breaks = seq(0,5, 1)) +
+    scale_fill_manual(name = 'Region', labels = ipcc_lbl, values = c("#913640","#040404",
+                                                                              "#4B4C40",
+                                                                              "#CC79A7",
+                                                                              "#928261",
+                                                                              "#EAAD89")) +
+    theme_bw() +
     theme(text         = element_text(color = 'black', size = 7),
           axis.text    = element_text(size = 7, color = 'black'),
           strip.text   = element_text(size = 6, color = 'black'),
@@ -973,17 +899,20 @@ barplot_fig     = function(dt) {
   gg3 = ggplot(dt, aes(x = scenario, y = d_s_N2O, group = interaction(scenario, IPCC_NAME), 
                        fill = IPCC_NAME)) +
     geom_bar(stat = 'identity', position = position_dodge(), width = 0.8) +
-    geom_errorbar(aes(ymin= d_s_N2O - sd_s_N2O, ymax = d_s_N2O + sd_s_N2O), 
+    geom_errorbar(aes(ymin= d_s_N2O - se_s_N2O, ymax = d_s_N2O + se_s_N2O), 
                   width=.4, position=position_dodge(0.8)) +
     coord_flip() +
     geom_hline(yintercept = 0) +
     scale_x_discrete(labels = scenario_lbl, limits = c('ccl-ntill','ccl-res', 
                                                        'ccg-ntill', 'ccg-res')) +
     ylab((expression(atop(paste(Annual~N2O~Emissions), '('*Mg~CO[2]*-eq*~ha^-1*~yr^-1*')')))) +
-    scale_y_continuous(limits = c(-8,8), breaks = seq(-8,8, 1)) +
-    scale_fill_manual(name = 'Region', labels = ipcc_lbl, values = c("#913640","#040404","#4B4C40","#FFCEF4",
-                                                                              "#928261","#EAAD89")) +
-                                                                                theme_bw() +
+    scale_y_continuous(limits = c(-4,2), breaks = seq(-4,2, 0.5)) +
+    scale_fill_manual(name = 'Region', labels = ipcc_lbl, values = c("#913640","#040404",
+                                                                              "#4B4C40",
+                                                                              "#CC79A7",
+                                                                              "#928261",
+                                                                              "#EAAD89")) +
+    theme_bw() +
     theme(text         = element_text(color = 'black', size = 7),
           axis.text    = element_text(size = 7, color = 'black'),
           strip.text   = element_text(size = 6, color = 'black'),
@@ -995,16 +924,19 @@ barplot_fig     = function(dt) {
   gg4 = ggplot(dt, aes(x = scenario, y = d_s_cgrain, group = interaction(scenario, IPCC_NAME), 
                        fill = IPCC_NAME)) +
     geom_bar(stat = 'identity', position = position_dodge(), width = 0.8) +
-    geom_errorbar(aes(ymin= d_s_cgrain - sd_s_cgrain, ymax = d_s_cgrain + sd_s_cgrain), 
+    geom_errorbar(aes(ymin= d_s_cgrain - se_s_cgrain, ymax = d_s_cgrain + se_s_cgrain), 
                   width=.4, position=position_dodge(0.8)) +
     coord_flip() +
     geom_hline(yintercept = 0) +
     scale_x_discrete(labels = scenario_lbl, limits = c('ccl-ntill','ccl-res', 
                                                        'ccg-ntill', 'ccg-res')) +
     ylab((expression(atop(paste(Annual~Yield~Difference), '('*Mg~ha^-1*~yr^-1*')')))) +
-    scale_y_continuous(limits = c(-2,4), breaks = seq(-2,4, 1)) +
-    scale_fill_manual(name = 'Region', labels = ipcc_lbl, values = c("#913640","#040404","#4B4C40","#FFCEF4",
-                                                                              "#928261","#EAAD89")) +
+    scale_y_continuous(limits = c(-2,2), breaks = seq(-2,2, 0.5)) +
+    scale_fill_manual(name = 'Region', labels = ipcc_lbl, values = c("#913640","#040404",
+                                                                              "#4B4C40",
+                                                                              "#CC79A7",
+                                                                              "#928261",
+                                                                              "#EAAD89")) +
     theme_bw() +
     theme(text         = element_text(color = 'black', size = 7),
           axis.text    = element_text(size = 7, color = 'black'),
@@ -1017,3 +949,116 @@ barplot_fig     = function(dt) {
   return(list(ghg = gg1, soc = gg2, n2o = gg3, yield = gg4))
 }
 # feature_p
+bmp_regional_fig    = function(dt, reg, g, y, constant) {
+  dt_r = copy(dt)
+  dt_r = dt_r[IPCC_NAME %in% reg & goal %in% g & y_block %in% y,]
+  
+  scenario_lbl = c('ccg-res' = c('Grass CC + Res + Till'),     
+                   'ccl-res' = c('Legume CC + Res + Till'),    
+                   'ccg-ntill' = c('Grass CC + Res + Ntill'),  
+                   'ccl-ntill' = c('Legume CC + Res + Ntill'), 
+                   'cp'        = c('Continued Management'))    
+  dt$scenario  = factor(dt$scenario, levels = c('ccg-res', 'ccg-ntill', 'ccl-res', 'ccl-ntill', 'cp'))
+  
+  goal_lbl     = c('max-ghg'      = 'M', 
+                   'max-ghg-yc'   = 'C',
+                   'max-yield'    = 'M',
+                   'max-yield-gc' = 'C')
+  
+  # GHG
+  gg_GHG = ggplot(dt_r[!scenario == 'cp'], aes(x = scenario, y = s_GHG/constant, fill = scenario)) +
+    geom_bar(stat = 'identity', position = position_dodge(), width = 0.8) +
+    geom_errorbar(aes(ymin = (s_GHG/constant) - (sd_s_GHG/constant), 
+                      ymax = (s_GHG/constant) + (sd_s_GHG/constant)), 
+                  width=.4, position=position_dodge(0.8)) +
+    geom_hline(yintercept = 0, color = "grey50") +
+    facet_grid(.~goal, labeller = as_labeller(goal_lbl)) +
+    scale_x_discrete(labels = scenario_lbl, limits = c('ccg-res', 'ccg-ntill',
+                                                       'ccl-res', 'ccl-ntill')) +
+    ylab((expression(atop(paste(Annual~GHG~Mitigation~Potential), '('*Tg~CO[2]*-eq*~yr^-1*')')))) +
+    scale_fill_manual(labels = scenario_lbl, values = c('ccg-res'   = "#8B0069",
+                                                        'ccl-res'   = "#A75529",
+                                                        'ccg-ntill' = "#9A9800", 
+                                                        'ccl-ntill' = "#5DD291",
+                                                        'cp'        = "#B0F4FA")) +
+    theme_bw() +
+    theme(legend.position = 'none',
+          text = element_text(color = 'grey30', size = 5),
+          axis.text    = element_text(size = 5, color = 'grey30'),
+          strip.text   = element_text(size = 5, color = 'grey30'),
+          axis.title.x = element_blank(),
+          axis.title.y = element_blank(),
+          axis.text.x  = element_blank(),
+          axis.ticks.x = element_blank(),
+          strip.background = element_rect(fill='transparent'),
+          panel.background = element_rect(fill='transparent'), #transparent panel bg
+          plot.background = element_rect(fill='transparent', color=NA), #transparent plot bg
+          legend.background = element_rect(fill='transparent'), #transparent legend bg
+          legend.box.background = element_rect(fill='transparent') #transparent legend panel
+    )
+  gg_GHG
+  
+  # yield 
+  gg_yield = ggplot(dt_r[!scenario == 'cp'], aes(x = scenario, y = s_grain/constant, fill = scenario)) +
+    geom_bar(stat = 'identity', position = position_dodge(), width = 0.8) +
+    geom_errorbar(aes(ymin = (s_grain/constant) - (sd_s_grain/constant), 
+                      ymax = (s_grain/constant) + (sd_s_grain/constant)), 
+                  width=.4, position=position_dodge(0.8)) +
+    geom_hline(yintercept = 0, color = "grey50") +
+    facet_grid(.~goal, labeller = as_labeller(goal_lbl)) +
+    scale_x_discrete(labels = scenario_lbl, limits = c('ccg-res', 'ccg-ntill',
+                                                       'ccl-res', 'ccl-ntill')) +
+    ylab((expression(atop(paste(Annual~Yield~Potential), '('*Tg~yr^-1*')')))) +
+    scale_fill_manual(labels = scenario_lbl, values = c('ccg-res'   = "#8B0069",
+                                                        'ccl-res'   = "#A75529",
+                                                        'ccg-ntill' = "#9A9800", 
+                                                        'ccl-ntill' = "#5DD291",
+                                                        'cp'        = "#B0F4FA")) +
+    theme_bw() +
+    theme(legend.position = 'none',
+          text = element_text(color = 'grey30', size = 5),
+          axis.text    = element_text(size = 5, color = 'grey30'),
+          strip.text   = element_text(size = 5, color = 'grey30'),
+          axis.title.x = element_blank(),
+          axis.title.y = element_blank(),
+          axis.text.x  = element_blank(),
+          axis.ticks.x = element_blank(),
+          strip.background = element_rect(fill='transparent'),
+          panel.background = element_rect(fill='transparent'), #transparent panel bg
+          plot.background = element_rect(fill='transparent', color=NA), #transparent plot bg
+          legend.background = element_rect(fill='transparent'), #transparent legend bg
+          legend.box.background = element_rect(fill='transparent') #transparent legend panel
+    )
+  gg_yield
+  
+  # hectares / stacked bplot 
+  gg_area = ggplot(dt_r, aes(fill = scenario, y = IPCC_NAME, x = m_hectares)) +
+    geom_bar(position = 'fill', stat = 'identity', width = 0.7) +
+    coord_flip() +
+    facet_grid(.~goal, labeller = as_labeller(goal_lbl)) +
+    xlab('Proportion of Cropland Area') +
+    scale_fill_manual(labels = scenario_lbl, values = c('ccg-res'   = "#8B0069",
+                                                        'ccl-res'   = "#A75529",
+                                                        'ccg-ntill' = "#9A9800", 
+                                                        'ccl-ntill' = "#5DD291",
+                                                        'cp'        = "#B0F4FA")) +
+    theme_bw() +
+    theme(legend.position = 'none',
+          text = element_text(color = 'grey30', size = 5),
+          axis.text    = element_text(size = 5, color = 'grey30'),
+          strip.text   = element_text(size = 5, color = 'grey30'),
+          axis.title.x = element_blank(),
+          axis.title.y = element_blank(),
+          axis.text.x  = element_blank(),
+          axis.ticks.x = element_blank(),
+          strip.background = element_rect(fill='transparent'),
+          panel.background = element_rect(fill='transparent'), #transparent panel bg
+          plot.background = element_rect(fill='transparent', color=NA), #transparent plot bg
+          legend.background = element_rect(fill='transparent'), #transparent legend bg
+          legend.box.background = element_rect(fill='transparent') #transparent legend panel
+    )
+  gg_area
+  
+  ggplots = list(GHG = gg_GHG, YIELD = gg_yield, AREA = gg_area)
+  return(ggplots)
+}

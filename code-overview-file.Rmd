@@ -1,0 +1,239 @@
+---
+title: "Code Overview File"
+author: "S.C. McClelland"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Code Overview
+
+This file describes the code and how to execute scripts for the study, "Finding opportunities to meet both climate change mitigation and production goals in croplands."
+
+It is recommended to execute scripts in the sequence described below. Due to the large data size, many of these scripts need to be run individually, with some modifications by the user. These modifications are described in each script.
+
+The simulation and uncertainty results from DayCent were generated separately; the model code and execution scripts are not included here. Please direct inquiries to S.C. McClelland.
+
+## R proj
+
+The Rproj should contain the following sub-directories:
+
+-   /r (all scripts)
+
+-   /data (all data sub-directories). These must be downloaded from Zenodo.
+
+-   /figures (all figure sub-directories)
+
+The Zenodo repo only contains the /r files associated with project. Executing the script /r/make-dirs.R will create the required data and figure directories and sub-directories.
+
+### data sub-directories
+
+-   /data/analysis-output
+
+-   /data/daycent-post-processed
+
+-   /data/daycent-simulations
+
+-   /data/uncertainty-output
+
+### figure sub-directories
+
+-   /figures/main
+
+-   /figures/ext
+
+-   /figures/si
+
+## Contents
+
+1.  Uncertainty scripts
+2.  Impute scripts
+3.  Analysis scripts
+4.  Figure scripts
+
+Scripts should be executed in the order listed (if trying to recreate the full analysis). Otherwise, users can skip to step 3 if they are only interested in recreating or modifying analyses.
+
+After executing /r/make-dirs.R, run the script /r/check.R. This script will run a check on the contents of the directory and sub-directory confirming if all required files are present. If files are missing, the script will return an error or warning with a recommendation for how to address the issue.
+
+## Abbreviations
+
+#### Scenarios
+
+ccg-res: grass cover crop, full residue retention, with conventional tillage
+
+ccg-ntill: grass cover crop, full residue retention, with no-tillage
+
+ccl-res: legume cover crop, full residue retention, with conventional tillage
+
+ccl-ntill: legume cover crop, full residue retention, with no-tillage
+
+conv: continued, conventional cropland management (i.e., fallow and conventional tillage, no cover crops or no-tillage practiced)
+
+#### filenames
+
+This is an incomplete description primarily focusing on data files in all data sub-directories except for /data/analysis-output.
+
+ghg: greenhouse gas
+
+dN2O: direct nitrous oxide (N2O) emissions
+
+iN2O: indirect nitrous oxide (N2O) emissions
+
+SOC: soil organic carbon
+
+somsc: soil organic carbon (terminology from DayCent model)
+
+cgrain: grain yield
+
+SHAP: SHapley Additive exPlanation
+
+N.B. files with prefix 's\_' indicate sum or cumulative value
+
+#### column names and units
+
+All units for response variables from input files are in Mg CO2-eq ha-1 (ghg) or Mg ha-1 (yield). This is generally the case for output files in /data/analysis-output except for global and regional summaries in which case units are Mg CO2-eq or Mg.
+
+For overall variable descriptions, including for the machine learning input files, please see file, variable-descriptions.xlsx, for more information.
+
+gridid: grid cell number
+
+crop: cash crop type (maize, 'maiz,' soybean, 'soyb,' spring wheat, 'swht')
+
+irr: water management; 0 is rainfed, 1 is irrigated
+
+ssp: Shared Socio-economic Pathway, ssp370
+
+gcm: Climate variant, 24 different GCMs from CMIP6
+
+scenario: See above
+
+y_block: time period, 2030 (2016-2030), 2050 (2016-2050), 2100 (2016-2100)
+
+IPCC_NAME: ADP (Asia and Developing Pacific), AME (Africa and Middle East), DEV (developed countries), EEWCA (East Europe and West-central Asia), and LAC (Latin America and Caribbean)
+
+rep: uncertainty iteration
+
+d_s\_SOC: relative difference in cumulative SOC (scenario - conv)
+
+d_s\_N2O: relative difference in cumulative N2O (sum of dN2O and iN2O) (scenario - conv)
+
+d_s\_GHG: relative difference in cumulative GHG (scenario - conv)
+
+d_s\_cgrain: relative difference in grain yield, dry matter (scenario - conv)
+
+s_SOC: actual SOC flux
+
+s_N2O: actual N2O flux
+
+s_GHG: actual GHG flux
+
+s_cgrain: actual grain yield
+
+### 1. Uncertainty scripts
+
+These scripts execute the uncertainty analysis on the DayCent simulation output. Only required if interested in recreating input data.
+
+Input: /data/daycent-simulations
+
+Output: /data/daycent-post-processed
+
+Uncertainty Scripts:
+
+-   uncertainty-climate-selection.R \| selects random climate for each Monte Carlo iteration
+
+-   uncertainty-dN2O-script.R \| estimates uncertainty for direct N2O
+
+-   uncertainty-iN2O-script.R \| estimates uncertainty for indirect N2O
+
+-   uncertainty-somsc-script.R \| estimates uncertainty for soil C
+
+The dN2O, iN2O, and somsc scripts are run from the command line. One argument is required to execute corresponding to the scenario. This is a selection of 'conv,' 'ccg-res,' 'ccg-ntill,' 'ccl-res,' or 'ccl-ntill.'
+
+Example: \> Rscript uncertainty-dN2O-script.R conv
+
+GHG and Yield Estimate Scripts:
+
+-   scenario-ghg-estimates.R
+
+-   scenario-crop-estimates.R
+
+These scripts estimate relative differences (scenario - conv) and absolute responses for GHG and yield.
+
+### 2. Impute scripts
+
+These scripts impute estimates for missing gridid that are required to estimate global and regional totals consistent with the number of hectares in the cropland dataset (\~405 Mha).
+
+Only required if interested in recreating input data.
+
+Input: /data/daycent-post-processed
+
+Output: /data/daycent-post-processed
+
+Scripts:
+
+-   impute-functions.R
+
+-   impute-missing-gcm.R
+
+-   impute-missing-uncertainty.R
+
+### 3. Analysis scripts
+
+These scripts execute the analyses that inform the study results.
+
+Input: /data/daycent-post-processed
+
+Output: /data/analysis-output
+
+Script (functions):
+
+-   analysis-functions.R
+
+Scripts (hectare response):
+
+-   analysis-hectare-gridid.R
+
+-   analysis-hectare-weighted-gridid.R
+
+-   analysis-hectare
+
+Script (machine learning):
+
+-   analysis-ML.R
+
+Scripts (global / regional potential):
+
+-   analysis-potential.R
+
+-   analysis-potential-bootstrap.R
+
+Scripts (Pareto-optimal / goal-based adoption):
+
+-   analysis-recommended-practice-2050.R
+
+-   analysis-recommended-practice-2100.R
+
+### 4. Figure scripts
+
+These scripts create the figures used in the main text, extended data, and supplementary information.
+
+Input: /data/analysis-output
+
+Output: /figures/main or /figures/ext or /figures/si
+
+Scripts (functions):
+
+-   figure-functions.R
+
+-   plot_discrete_color_bar.R
+
+Scripts (main, ext, si):
+
+-   figures-main.R
+
+-   figures-extended-data.R
+
+-   figures-si.R

@@ -1,4 +1,6 @@
-# analysis-functions
+# file name:    analysis-functions.R
+# created:      18 November 2024
+# last updated: 21 February 2025
 #-----------------------------------------------------------------------------------------
 # analysis-hectare
 #-----------------------------------------------------------------------------------------
@@ -193,34 +195,6 @@ create_crop_dt = function(country.sf, crop_r) {
 # analysis-recommended-practice-2050 
 #-----------------------------------------------------------------------------------------
 # create_crop_dt
-#-----------------------------------------------------------------------------------------
-# analysis-Pareto
-#-----------------------------------------------------------------------------------------
-# Compute Pareto front for a bootstrap sample
-compute_pareto = function(i) {
-  ghg_sample = ghg_dt[, {
-    # Sample one GHG value from one of the iterations
-    ghg_sample = d_s_GHG[sample(.N, 1)]
-    .(d_s_GHG = ghg_sample)
-  }, by = .(gridid, crop, irr, scenario)]
-  
-  yield_sample = yield_dt[, {
-    # Sample one yield value for one of the iterations
-    yield_sample = d_s_cgrain[sample(.N, 1)]
-    .(d_s_cgrain = yield_sample)
-  }, by = .(gridid, crop, irr, scenario)]
-  
-  ghg_agg   = ghg_sample[, .(ghg_mean = mean(d_s_GHG)), 
-                        by = .(gridid, crop, irr, scenario)]
-  yield_agg = yield_sample[, .(yield_mean = mean(d_s_cgrain)), 
-                            by = .(gridid, crop, irr, scenario)]
-  
-  combined = merge(ghg_agg, yield_agg, 
-                    by = c("gridid", "crop", "irr", "scenario"))
-  # pareto front
-  pareto_front = psel(combined, pref)
-  return(pareto_front)
-}
 #-----------------------------------------------------------------------------------------
 # analysis-recommended-practice-2100
 #-----------------------------------------------------------------------------------------

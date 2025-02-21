@@ -1,6 +1,6 @@
 # filename:    figures-si.R
 # created:     19 December 2025
-# updated:     17 January 2025
+# updated:     21 February 2025
 # author:      S.C. McClelland
 # description: This file creates figures included in the SI of the manuscript.
 #-----------------------------------------------------------------------------------------
@@ -73,11 +73,11 @@ data = ghg[yield, on = .(scenario = scenario,
 # make annual, Mg CO2-eq ha-1 yr-1
 data_2050 = data[y_block == 2050, lapply(.SD, function(x) {x/35}), 
                  .SDcols = c('d_s_SOC', 'd_s_N2O','d_s_GHG', 'd_s_cgrain',
-                             'sd_s_SOC', 'sd_s_N2O', 'sd_s_GHG', 'sd_s_cgrain'),
+                             'se_s_SOC', 'se_s_N2O', 'se_s_GHG', 'se_s_cgrain'),
                  by = .(scenario, y_block, IPCC_NAME)]
 data_2100 = data[y_block == 2100, lapply(.SD, function(x) {x/85}), 
                  .SDcols = c('d_s_SOC', 'd_s_N2O','d_s_GHG', 'd_s_cgrain',
-                             'sd_s_SOC', 'sd_s_N2O', 'sd_s_GHG', 'sd_s_cgrain'),
+                             'se_s_SOC', 'se_s_N2O', 'se_s_GHG', 'se_s_cgrain'),
                  by = .(scenario, y_block, IPCC_NAME)]
 # create barplot, left
 fig1_l    = barplot_fig(data_2050)
@@ -93,7 +93,7 @@ fig1_l$soc = fig1_l$soc + theme(
     size = 7       # Match your other text size if needed
   )
 ) +
-  ggtitle("(a)")
+  ggtitle("Near-term, 2016-2050", "(a)")
 fig1_l$n2o = fig1_l$n2o + theme(
   plot.title.position = "plot",  # This moves the title to align with plot edge
   plot.title = element_text(
@@ -102,7 +102,7 @@ fig1_l$n2o = fig1_l$n2o + theme(
     size = 7       # Match your other text size if needed
   )
 ) +
-  ggtitle("(a)")
+  ggtitle("Near-term, 2016-2050", "(a)")
 
 fig1_l$ghg = fig1_l$ghg + theme(
   plot.title.position = "plot",  # This moves the title to align with plot edge
@@ -112,7 +112,7 @@ fig1_l$ghg = fig1_l$ghg + theme(
     size = 7       # Match your other text size if needed
   )
 ) +
-  ggtitle("(a)")
+  ggtitle("Near-term, 2016-2050", "(a)")
 
 fig1_l$yield = fig1_l$yield + theme(
   plot.title.position = "plot",  # This moves the title to align with plot edge
@@ -122,7 +122,7 @@ fig1_l$yield = fig1_l$yield + theme(
     size = 7       # Match your other text size if needed
   )
 ) +
-  ggtitle("(a)")
+  ggtitle("Near-term, 2016-2050", "(a)")
 
 fig1_r$soc = fig1_r$soc + theme(
   axis.text.y = element_blank(),
@@ -134,7 +134,7 @@ fig1_r$soc = fig1_r$soc + theme(
     size = 7       # Match your other text size if needed
   )
 ) +
-  ggtitle("(b)")
+  ggtitle("Medium-term, 2016-2100", "(b)")
 fig1_r$n2o = fig1_r$n2o + theme(
   axis.text.y = element_blank(),
   axis.ticks.y = element_blank(),
@@ -145,7 +145,7 @@ fig1_r$n2o = fig1_r$n2o + theme(
     size = 7       # Match your other text size if needed
   )
 ) +
-  ggtitle("(b)")
+  ggtitle("Medium-term, 2016-2100", "(b)")
 
 fig1_r$ghg = fig1_r$ghg + theme(
   axis.text.y = element_blank(),
@@ -157,7 +157,7 @@ fig1_r$ghg = fig1_r$ghg + theme(
     size = 7       # Match your other text size if needed
   )
 ) +
-  ggtitle("(b)")
+  ggtitle("Medium-term, 2016-2100", "(b)")
 
 fig1_r$yield = fig1_r$yield + theme(
   axis.text.y = element_blank(),
@@ -169,7 +169,7 @@ fig1_r$yield = fig1_r$yield + theme(
     size = 7       # Match your other text size if needed
   )
 ) +
-  ggtitle("(b)")
+  ggtitle("Medium-term, 2016-2100", "(b)")
 
 # combine
 fig1_l$soc = fig1_l$soc + theme(legend.position = 'none')
@@ -243,25 +243,29 @@ ccg_res_ghg_map   = cov_ghg_map_fig(ghg[scenario %in% 'ccg-res' &
                                            y_block == 2050])
 ccg_res_ghg_map$GHG = ccg_res_ghg_map$GHG +
   annotate("text", x = -Inf, y = Inf, label = "(a)", # top left
-           hjust = 0, vjust = 1, size = 4)
+           hjust = 0, vjust = 1, size = 4) +
+  ggtitle('Grass CC')
 # ccl-res
 ccl_res_ghg_map   = cov_ghg_map_fig(ghg[scenario %in% 'ccl-res' &
                                           y_block == 2050])
 ccl_res_ghg_map$GHG = ccl_res_ghg_map$GHG +
   annotate("text", x = -Inf, y = Inf, label = "(e)", # top left
-           hjust = 0, vjust = 1, size = 4)
+           hjust = 0, vjust = 1, size = 4) +
+  ggtitle('Legume CC')
 # ccg-ntill
 ccg_ntill_ghg_map = cov_ghg_map_fig(ghg[scenario %in% 'ccg-ntill' &
                                       y_block == 2050])
 ccg_ntill_ghg_map$GHG = ccg_ntill_ghg_map$GHG +
   annotate("text", x = -Inf, y = Inf, label = "(c)", # top left
-           hjust = 0, vjust = 1, size = 4)
+           hjust = 0, vjust = 1, size = 4) +
+  ggtitle('Grass CC + Ntill')
 # ccl-ntill
 ccl_ntill_ghg_map = cov_ghg_map_fig(ghg[scenario %in% 'ccl-ntill' &
                                       y_block == 2050])
 ccl_ntill_ghg_map$GHG = ccl_ntill_ghg_map$GHG +
   annotate("text", x = -Inf, y = Inf, label = "(g)", # top left
-           hjust = 0, vjust = 1, size = 4)
+           hjust = 0, vjust = 1, size = 4) +
+  ggtitle('Legume CC + Ntill')
 
 # YIELD
 # load data | N.B. does not include imputed values 
@@ -327,25 +331,29 @@ ccg_res_ghg_map   = cov_ghg_map_fig(ghg[scenario %in% 'ccg-res' &
                                           y_block == 2100])
 ccg_res_ghg_map$GHG = ccg_res_ghg_map$GHG +
   annotate("text", x = -Inf, y = Inf, label = "(a)", # top left
-           hjust = 0, vjust = 1, size = 4)
+           hjust = 0, vjust = 1, size = 4) +
+  ggtitle('Grass CC')
 # ccl-res
 ccl_res_ghg_map   = cov_ghg_map_fig(ghg[scenario %in% 'ccl-res' &
                                           y_block == 2100])
 ccl_res_ghg_map$GHG = ccl_res_ghg_map$GHG +
   annotate("text", x = -Inf, y = Inf, label = "(e)", # top left
-           hjust = 0, vjust = 1, size = 4)
+           hjust = 0, vjust = 1, size = 4) +
+  ggtitle('Legume CC')
 # ccg-ntill
 ccg_ntill_ghg_map = cov_ghg_map_fig(ghg[scenario %in% 'ccg-ntill' &
                                           y_block == 2100])
 ccg_ntill_ghg_map$GHG = ccg_ntill_ghg_map$GHG +
   annotate("text", x = -Inf, y = Inf, label = "(c)", # top left
-           hjust = 0, vjust = 1, size = 4)
+           hjust = 0, vjust = 1, size = 4) +
+  ggtitle('Grass CC + Ntill')
 # ccl-ntill
 ccl_ntill_ghg_map = cov_ghg_map_fig(ghg[scenario %in% 'ccl-ntill' &
                                           y_block == 2100])
 ccl_ntill_ghg_map$GHG = ccl_ntill_ghg_map$GHG +
   annotate("text", x = -Inf, y = Inf, label = "(g)", # top left
-           hjust = 0, vjust = 1, size = 4)
+           hjust = 0, vjust = 1, size = 4) +
+  ggtitle('Legume CC + Ntill')
 # YIELD
 # ccg-res
 ccg_res_y_map     = cov_yield_map_fig(yield[scenario %in% 'ccg-res' &
@@ -404,7 +412,7 @@ ccg_res_shv = shapviz(ccg_res_SHAP$class_SHAP$`w-l`)
 ccg_res_gg  = sv_importance(ccg_res_shv)
 # features (reverse order)
 ccg_res_ft  = c('Initial Soil Nitrate', 'Nitrogen Inputs', 'Soil Bulk Density',
-                'Initial Residue Return Fraction', 'Crop')
+                'Initial Residue Fraction', 'Cash Crop')
 # types (actual order)
 ccg_res_t   = c('Management', 'Management', 'Soil', 'Management', 'Site')
 # plot
@@ -418,14 +426,14 @@ ccg_res_fig_wl = ccg_res_fig_wl + theme(
     size = 7       # Match your other text size if needed
   )
 ) +
-  ggtitle("(a)")
+  ggtitle("Grass CC","(a)")
 
 # extract data and initial visualization
 ccg_res_shv = shapviz(ccg_res_SHAP$class_SHAP$`l-w`)
 ccg_res_gg  = sv_importance(ccg_res_shv)
 # features (reverse order)
-ccg_res_ft  = c('Water Management', 'Soil Bulk Density', 'Initial Residue Return Fraction',
-                'Nitrogen Inputs', 'Crop')
+ccg_res_ft  = c('Water Management', 'Soil Bulk Density', 'Initial Residue Fraction',
+                'Nitrogen Inputs', 'Cash Crop')
 # types (actual order)
 ccg_res_t   = c('Management', 'Management', 'Management', 'Soil', 'Management')
 # plot
@@ -439,13 +447,13 @@ ccg_res_fig_lw = ccg_res_fig_lw + theme(
     size = 7       # Match your other text size if needed
   )
 ) +
-  ggtitle("(b)")
+  ggtitle("","(b)")
 
 # extract data and initial visualization
 ccg_res_shv = shapviz(ccg_res_SHAP$class_SHAP$`l-l`)
 ccg_res_gg  = sv_importance(ccg_res_shv)
 # features (reverse order)
-ccg_res_ft  = c('Initial Residue Return Fraction', 'Water Management', 'Nitrogen Inputs',
+ccg_res_ft  = c('Initial Residue Fraction', 'Water Management', 'Nitrogen Inputs',
                 'Initial Soil Nitrate', 'Soil Bulk Density')
 # types (actual order)
 ccg_res_t   = c('Soil', 'Site', 'Management', 'Management', 'Management')
@@ -460,7 +468,7 @@ ccg_res_fig_ll = ccg_res_fig_ll + theme(
     size = 7       # Match your other text size if needed
   )
 ) +
-  ggtitle("(c)")
+  ggtitle("","(c)")
 
   ## ccg-ntill ##
 # extract data and initial visualization
@@ -468,7 +476,7 @@ ccg_ntill_shv = shapviz(ccg_ntill_SHAP$class_SHAP$`w-l`)
 ccg_ntill_gg  = sv_importance(ccg_ntill_shv)
 # features (reverse order)
 ccg_ntill_ft  = c('Nitrogen Inputs', 'Soil Bulk Density', 'Initial Soil Nitrate',
-                'Initial Residue Return Fraction', 'Crop')
+                'Initial Residue Fraction', 'Cash Crop')
 # types (actual order)
 ccg_ntill_t   = c('Management', 'Management', 'Site', 'Soil', 'Management')
 # plot
@@ -482,14 +490,14 @@ ccg_ntill_fig_wl = ccg_ntill_fig_wl + theme(
     size = 7       # Match your other text size if needed
   )
 ) +
-  ggtitle("(d)")
+  ggtitle("Grass CC + Ntill","(d)")
 
 # extract data and initial visualization
 ccg_ntill_shv = shapviz(ccg_ntill_SHAP$class_SHAP$`l-w`)
 ccg_ntill_gg  = sv_importance(ccg_ntill_shv)
 # features (reverse order)
-ccg_ntill_ft  = c('Mean Diurnal Range', 'Initial Soil Nitrate', 'Initial Residue Return Fraction',
-                'Nitrogen Inputs', 'Crop')
+ccg_ntill_ft  = c('Mean Diurnal Range', 'Initial Soil Nitrate', 'Initial Residue Fraction',
+                'Nitrogen Inputs', 'Cash Crop')
 # types (actual order)
 ccg_ntill_t   = c('Management', 'Management', 'Management', 'Site', 'Climate')
 # plot
@@ -503,14 +511,14 @@ ccg_ntill_fig_lw = ccg_ntill_fig_lw + theme(
     size = 7       # Match your other text size if needed
   )
 ) +
-  ggtitle("(e)")
+  ggtitle("","(e)")
 
 # extract data and initial visualization
 ccg_ntill_shv = shapviz(ccg_ntill_SHAP$class_SHAP$`l-l`)
 ccg_ntill_gg  = sv_importance(ccg_ntill_shv)
 # features (reverse order)
-ccg_ntill_ft  = c('Soil pH', 'Initial Residue Return Fraction', 'Initial Soil Water Content',
-                'Crop', 'Soil Bulk Density')
+ccg_ntill_ft  = c('Soil pH', 'Initial Residue Fraction', 'Initial Soil Water Content',
+                'Cash Crop', 'Soil Bulk Density')
 # types (actual order)
 ccg_ntill_t   = c('Soil', 'Management', 'Site', 'Management', 'Soil')
 # plot
@@ -524,7 +532,7 @@ ccg_ntill_fig_ll = ccg_ntill_fig_ll + theme(
     size = 7       # Match your other text size if needed
   )
 ) +
-  ggtitle("(f)")
+  ggtitle("","(f)")
 
   ## ccl-res ##
 # extract data and initial visualization
@@ -532,7 +540,7 @@ ccl_res_shv = shapviz(ccl_res_SHAP$class_SHAP$`w-l`)
 ccl_res_gg  = sv_importance(ccl_res_shv)
 # features (reverse order)
 ccl_res_ft  = c('Soil Bulk Density', 'Soil pH', 'Nitrogen Inputs',
-                'Initial Soil Nitrate', 'Crop')
+                'Initial Soil Nitrate', 'Cash Crop')
 # types (actual order)
 ccl_res_t   = c('Management', 'Site', 'Management', 'Soil', 'Soil')
 # plot
@@ -546,14 +554,14 @@ ccl_res_fig_wl = ccl_res_fig_wl + theme(
     size = 7       # Match your other text size if needed
   )
 ) +
-  ggtitle("(g)")
+  ggtitle("Legume CC","(g)")
 
 # extract data and initial visualization
 ccl_res_shv = shapviz(ccl_res_SHAP$class_SHAP$`l-w`)
 ccl_res_gg  = sv_importance(ccl_res_shv)
 # features (reverse order)
-ccl_res_ft  = c('Initial Relative Soil Water Content', 'Water Management', 'Initial Soil Nitrate',
-                'Nitrogen Inputs', 'Crop')
+ccl_res_ft  = c('Initial Relative Soil Water', 'Water Management', 'Initial Soil Nitrate',
+                'Nitrogen Inputs', 'Cash Crop')
 # types (actual order)
 ccl_res_t   = c('Management', 'Management', 'Site', 'Management', 'Site')
 # plot
@@ -567,13 +575,13 @@ ccl_res_fig_lw = ccl_res_fig_lw + theme(
     size = 7       # Match your other text size if needed
   )
 ) +
-  ggtitle("(h)")
+  ggtitle("","(h)")
 
 # extract data and initial visualization
 ccl_res_shv = shapviz(ccl_res_SHAP$class_SHAP$`l-l`)
 ccl_res_gg  = sv_importance(ccl_res_shv)
 # features (reverse order)
-ccl_res_ft  = c('Soil Bulk Density', 'Crop', 'Water Management',
+ccl_res_ft  = c('Soil Bulk Density', 'Cash Crop', 'Water Management',
                 'Initial Soil Nitrate', 'Nitrogen Inputs')
 # types (actual order)
 ccl_res_t   = c('Management', 'Site', 'Management', 'Management', 'Soil')
@@ -588,15 +596,15 @@ ccl_res_fig_ll = ccl_res_fig_ll + theme(
     size = 7       # Match your other text size if needed
   )
 ) +
-  ggtitle("(i)")
+  ggtitle("","(i)")
 
   ## ccl-ntill ##
 # extract data and initial visualization
 ccl_ntill_shv = shapviz(ccl_ntill_SHAP$class_SHAP$`w-l`)
 ccl_ntill_gg  = sv_importance(ccl_ntill_shv)
 # features (reverse order)
-ccl_ntill_ft  = c('Water Management', 'Initial Residue Return Fraction', 'Nitrogen Inputs',
-                  'Initial Soil Nitrate', 'Crop')
+ccl_ntill_ft  = c('Water Management', 'Initial Residue Fraction', 'Nitrogen Inputs',
+                  'Initial Soil Nitrate', 'Cash Crop')
 # types (actual order)
 ccl_ntill_t   = c('Management', 'Site', 'Management', 'Management', 'Management')
 # plot
@@ -610,14 +618,14 @@ ccl_ntill_fig_wl = ccl_ntill_fig_wl + theme(
     size = 7       # Match your other text size if needed
   )
 ) +
-  ggtitle("(j)")
+  ggtitle("Legume CC + Ntill", "(j)")
 
 # extract data and initial visualization
 ccl_ntill_shv = shapviz(ccl_ntill_SHAP$class_SHAP$`l-w`)
 ccl_ntill_gg  = sv_importance(ccl_ntill_shv)
 # features (reverse order)
 ccl_ntill_ft  = c('Mean Diurnal Range', 'Initial Residue Return', 'Initial Soil Nitrate',
-                  'Nitrogen Inputs', 'Crop')
+                  'Nitrogen Inputs', 'Cash rop')
 # types (actual order)
 ccl_ntill_t   = c('Management', 'Management', 'Site', 'Management', 'Climate')
 # plot
@@ -631,14 +639,14 @@ ccl_ntill_fig_lw = ccl_ntill_fig_lw + theme(
     size = 7       # Match your other text size if needed
   )
 ) +
-  ggtitle("(k)")
+  ggtitle("", "(k)")
 
 # extract data and initial visualization
 ccl_ntill_shv = shapviz(ccl_ntill_SHAP$class_SHAP$`l-l`)
 ccl_ntill_gg  = sv_importance(ccl_ntill_shv)
 # features (reverse order)
-ccl_ntill_ft  = c('Initial Soil Nitrate', 'Crop', 'Nitrogen Inputs',
-                  'Initial Soil Water Content', 'Soil Bulk Density')
+ccl_ntill_ft  = c('Initial Soil Nitrate', 'Cash Crop', 'Nitrogen Inputs',
+                  'Initial Soil Water', 'Soil Bulk Density')
 # types (actual order)
 ccl_ntill_t   = c('Soil', 'Site', 'Management', 'Management', 'Site')
 # plot
@@ -652,7 +660,7 @@ ccl_ntill_fig_ll = ccl_ntill_fig_ll + theme(
     size = 7       # Match your other text size if needed
   )
 ) +
-  ggtitle("(l)")
+  ggtitle("","(l)")
 
 fig7_final = ggarrange(ccg_res_fig_wl, ccg_res_fig_lw, ccg_res_fig_ll, 
                        ccg_ntill_fig_wl, ccg_ntill_fig_lw, ccg_ntill_fig_ll, 

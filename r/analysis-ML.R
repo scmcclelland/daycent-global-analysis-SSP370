@@ -1,10 +1,10 @@
-# filename:    analysis-potential.R
+# filename:    analysis-ML.R
 # created:     06 March 2023
-# updated:     07 January 2025
+# updated:     21 February 2025
 # author:      S.C. McClelland
 # description: This file uses random forest models and SHapley Additive exPlanation values (SHAP)
 #              to assess the environmental and management drivers of GHG and yield responses.
-#              Models are ...
+# note:        Run each scenario separately (large amount of data)
 #-----------------------------------------------------------------------------------------
 # LIBRARIES 
 #-----------------------------------------------------------------------------------------
@@ -49,32 +49,34 @@ site_table = site_table[, .(gridid, crop, irr, ELEV, MINERL_sum_, NITRAT_sum_,
   ## weather data ##
 wth_table  = fread(paste(data_p, 'input_weather_data_ssp370.csv', sep = '/'))
 
+### These should be loaded and executed one at a time because of file size ###  
+### Uncomment as required to run each scenario ###
   ## GHG estimates ##
 { 
-  ## ccg-res ##
-  d_ccg_res_dt = fread(paste(out_p, 'ccg-res-gridid-ghg-responses.csv', sep = '/'))
-  d_ccg_res_dt = d_ccg_res_dt[y_block == 2100, -c('sd_s_SOC', 'sd_s_N2O', 'sd_s_GHG')]
-  ## ccl-res ##
-  d_ccl_res_dt = fread(paste(out_p, 'ccl-res-gridid-ghg-responses.csv', sep = '/'))
-  d_ccl_res_dt = d_ccl_res_dt[y_block == 2100, -c('sd_s_SOC', 'sd_s_N2O', 'sd_s_GHG')]
-  ## ccg-ntill ##
-  d_ccg_ntill_dt = fread(paste(out_p, 'ccg-ntill-gridid-ghg-responses.csv', sep = '/'))
-  d_ccg_ntill_dt = d_ccg_ntill_dt[y_block == 2100, -c('sd_s_SOC', 'sd_s_N2O', 'sd_s_GHG')]
+  # ## ccg-res ##
+  # d_ccg_res_dt = fread(paste(out_p, 'ccg-res-gridid-ghg-responses.csv', sep = '/'))
+  # d_ccg_res_dt = d_ccg_res_dt[y_block == 2100, -c('sd_s_SOC', 'sd_s_N2O', 'sd_s_GHG')]
+  # ## ccl-res ##
+  # d_ccl_res_dt = fread(paste(out_p, 'ccl-res-gridid-ghg-responses.csv', sep = '/'))
+  # d_ccl_res_dt = d_ccl_res_dt[y_block == 2100, -c('sd_s_SOC', 'sd_s_N2O', 'sd_s_GHG')]
+  # ## ccg-ntill ##
+  # d_ccg_ntill_dt = fread(paste(out_p, 'ccg-ntill-gridid-ghg-responses.csv', sep = '/'))
+  # d_ccg_ntill_dt = d_ccg_ntill_dt[y_block == 2100, -c('sd_s_SOC', 'sd_s_N2O', 'sd_s_GHG')]
   ## ccl-ntill ##
   d_ccl_ntill_dt = fread(paste(out_p, 'ccl-ntill-gridid-ghg-responses.csv', sep = '/'))
   d_ccl_ntill_dt  = d_ccl_ntill_dt[y_block == 2100, -c('sd_s_SOC', 'sd_s_N2O', 'sd_s_GHG')]
 }
   ## Yield estimates ##
 { 
-  ## ccg-res ##
-  d_ccg_res_y_dt = fread(paste(out_p, 'ccg-res-gridid-yield-responses.csv', sep = '/'))
-  d_ccg_res_y_dt = d_ccg_res_y_dt[y_block == 2100, -c('sd_s_cgrain')]
-  ## ccl-res ##
-  d_ccl_res_y_dt = fread(paste(out_p, 'ccl-res-gridid-yield-responses.csv', sep = '/'))
-  d_ccl_res_y_dt = d_ccl_res_y_dt[y_block == 2100, -c('sd_s_cgrain')]
-  ## ccg-ntill ##
-  d_ccg_ntill_y_dt = fread(paste(out_p, 'ccg-ntill-gridid-yield-responses.csv', sep = '/'))
-  d_ccg_ntill_y_dt = d_ccg_ntill_y_dt[y_block == 2100, -c('sd_s_cgrain')]
+  # ## ccg-res ##
+  # d_ccg_res_y_dt = fread(paste(out_p, 'ccg-res-gridid-yield-responses.csv', sep = '/'))
+  # d_ccg_res_y_dt = d_ccg_res_y_dt[y_block == 2100, -c('sd_s_cgrain')]
+  # ## ccl-res ##
+  # d_ccl_res_y_dt = fread(paste(out_p, 'ccl-res-gridid-yield-responses.csv', sep = '/'))
+  # d_ccl_res_y_dt = d_ccl_res_y_dt[y_block == 2100, -c('sd_s_cgrain')]
+  # ## ccg-ntill ##
+  # d_ccg_ntill_y_dt = fread(paste(out_p, 'ccg-ntill-gridid-yield-responses.csv', sep = '/'))
+  # d_ccg_ntill_y_dt = d_ccg_ntill_y_dt[y_block == 2100, -c('sd_s_cgrain')]
   ## ccl-ntill ##
   d_ccl_ntill_y_dt = fread(paste(out_p, 'ccl-ntill-gridid-yield-responses.csv', sep = '/'))
   d_ccl_ntill_y_dt  = d_ccl_ntill_y_dt[y_block == 2100, -c('sd_s_cgrain')]
@@ -82,73 +84,78 @@ wth_table  = fread(paste(data_p, 'input_weather_data_ssp370.csv', sep = '/'))
 #-----------------------------------------------------------------------------------------
 # COMBINE DTs BY SCENARIO
 #-----------------------------------------------------------------------------------------
+### Uncomment as required to run each scenario ##
   ## ccg-res ##
-# responses
-d_ccg_res_dt = d_ccg_res_dt[d_ccg_res_y_dt, on = .(gridid   = gridid,
-                                                   y_block  = y_block,
-                                                   crop     = crop,
-                                                   irr      = irr,
-                                                   scenario = scenario)]
-d_ccg_res_dt = d_ccg_res_dt[!is.na(d_s_GHG)]
-# site
-d_ccg_res_dt = d_ccg_res_dt[site_table, on = .(gridid = gridid,
-                                               crop   = crop,
-                                               irr    = irr)]
-d_ccg_res_dt = d_ccg_res_dt[!is.na(y_block)]
-# management
-d_ccg_res_dt = d_ccg_res_dt[main_table, on = .(gridid = gridid,
-                                               crop   = crop,
-                                               irr    = irr)]
-d_ccg_res_dt = d_ccg_res_dt[!is.na(y_block)]
-# weather
-d_ccg_res_dt = d_ccg_res_dt[wth_table, on = .(gridid = gridid)]
-d_ccg_res_dt = d_ccg_res_dt[!is.na(scenario)]
-
+{
+# # responses
+# d_ccg_res_dt = d_ccg_res_dt[d_ccg_res_y_dt, on = .(gridid   = gridid,
+#                                                    y_block  = y_block,
+#                                                    crop     = crop,
+#                                                    irr      = irr,
+#                                                    scenario = scenario)]
+# d_ccg_res_dt = d_ccg_res_dt[!is.na(d_s_GHG)]
+# # site
+# d_ccg_res_dt = d_ccg_res_dt[site_table, on = .(gridid = gridid,
+#                                                crop   = crop,
+#                                                irr    = irr)]
+# d_ccg_res_dt = d_ccg_res_dt[!is.na(y_block)]
+# # management
+# d_ccg_res_dt = d_ccg_res_dt[main_table, on = .(gridid = gridid,
+#                                                crop   = crop,
+#                                                irr    = irr)]
+# d_ccg_res_dt = d_ccg_res_dt[!is.na(y_block)]
+# # weather
+# d_ccg_res_dt = d_ccg_res_dt[wth_table, on = .(gridid = gridid)]
+# d_ccg_res_dt = d_ccg_res_dt[!is.na(scenario)]
+}
   ## ccl-res ##
-# responses
-d_ccl_res_dt = d_ccl_res_dt[d_ccl_res_y_dt, on = .(gridid   = gridid,
-                                                   y_block  = y_block,
-                                                   crop     = crop,
-                                                   irr      = irr,
-                                                   scenario = scenario)]
-d_ccl_res_dt = d_ccl_res_dt[!is.na(d_s_GHG)]
-# site
-d_ccl_res_dt = d_ccl_res_dt[site_table, on = .(gridid = gridid,
-                                               crop   = crop,
-                                               irr    = irr)]
-d_ccl_res_dt = d_ccl_res_dt[!is.na(y_block)]
-# management
-d_ccl_res_dt = d_ccl_res_dt[main_table, on = .(gridid = gridid,
-                                               crop   = crop,
-                                               irr    = irr)]
-d_ccl_res_dt = d_ccl_res_dt[!is.na(y_block)]
-# weather
-d_ccl_res_dt = d_ccl_res_dt[wth_table, on = .(gridid = gridid)]
-d_ccl_res_dt = d_ccl_res_dt[!is.na(scenario)]
-
+{
+# # responses
+# d_ccl_res_dt = d_ccl_res_dt[d_ccl_res_y_dt, on = .(gridid   = gridid,
+#                                                    y_block  = y_block,
+#                                                    crop     = crop,
+#                                                    irr      = irr,
+#                                                    scenario = scenario)]
+# d_ccl_res_dt = d_ccl_res_dt[!is.na(d_s_GHG)]
+# # site
+# d_ccl_res_dt = d_ccl_res_dt[site_table, on = .(gridid = gridid,
+#                                                crop   = crop,
+#                                                irr    = irr)]
+# d_ccl_res_dt = d_ccl_res_dt[!is.na(y_block)]
+# # management
+# d_ccl_res_dt = d_ccl_res_dt[main_table, on = .(gridid = gridid,
+#                                                crop   = crop,
+#                                                irr    = irr)]
+# d_ccl_res_dt = d_ccl_res_dt[!is.na(y_block)]
+# # weather
+# d_ccl_res_dt = d_ccl_res_dt[wth_table, on = .(gridid = gridid)]
+# d_ccl_res_dt = d_ccl_res_dt[!is.na(scenario)]
+}
   ## ccg-ntill ##
-# responses
-d_ccg_ntill_dt = d_ccg_ntill_dt[d_ccg_ntill_y_dt, on = .(gridid   = gridid,
-                                                   y_block  = y_block,
-                                                   crop     = crop,
-                                                   irr      = irr,
-                                                   scenario = scenario)]
-d_ccg_ntill_dt = d_ccg_ntill_dt[!is.na(d_s_GHG)]
-# site
-d_ccg_ntill_dt = d_ccg_ntill_dt[site_table, on = .(gridid = gridid,
-                                               crop   = crop,
-                                               irr    = irr)]
-d_ccg_ntill_dt = d_ccg_ntill_dt[!is.na(y_block)]
-# management
-d_ccg_ntill_dt = d_ccg_ntill_dt[main_table, on = .(gridid = gridid,
-                                               crop   = crop,
-                                               irr    = irr)]
-d_ccg_ntill_dt = d_ccg_ntill_dt[!is.na(y_block)]
-# weather
-d_ccg_ntill_dt = d_ccg_ntill_dt[wth_table, on = .(gridid = gridid)]
-d_ccg_ntill_dt = d_ccg_ntill_dt[!is.na(scenario)]
-
+{
+# # responses
+# d_ccg_ntill_dt = d_ccg_ntill_dt[d_ccg_ntill_y_dt, on = .(gridid   = gridid,
+#                                                    y_block  = y_block,
+#                                                    crop     = crop,
+#                                                    irr      = irr,
+#                                                    scenario = scenario)]
+# d_ccg_ntill_dt = d_ccg_ntill_dt[!is.na(d_s_GHG)]
+# # site
+# d_ccg_ntill_dt = d_ccg_ntill_dt[site_table, on = .(gridid = gridid,
+#                                                crop   = crop,
+#                                                irr    = irr)]
+# d_ccg_ntill_dt = d_ccg_ntill_dt[!is.na(y_block)]
+# # management
+# d_ccg_ntill_dt = d_ccg_ntill_dt[main_table, on = .(gridid = gridid,
+#                                                crop   = crop,
+#                                                irr    = irr)]
+# d_ccg_ntill_dt = d_ccg_ntill_dt[!is.na(y_block)]
+# # weather
+# d_ccg_ntill_dt = d_ccg_ntill_dt[wth_table, on = .(gridid = gridid)]
+# d_ccg_ntill_dt = d_ccg_ntill_dt[!is.na(scenario)]
+}
   ## ccl-ntill ##
+{
 # responses
 d_ccl_ntill_dt = d_ccl_ntill_dt[d_ccl_ntill_y_dt, on = .(gridid   = gridid,
                                                          y_block  = y_block,
@@ -169,67 +176,73 @@ d_ccl_ntill_dt = d_ccl_ntill_dt[!is.na(y_block)]
 # weather
 d_ccl_ntill_dt = d_ccl_ntill_dt[wth_table, on = .(gridid = gridid)]
 d_ccl_ntill_dt = d_ccl_ntill_dt[!is.na(scenario)]
+}
 #-----------------------------------------------------------------------------------------
 # CATEGORIZE RESPONSE & CROP, IRR, and COMBINE fertilizer and organic N
 #-----------------------------------------------------------------------------------------
+### Uncomment as required to run each scenario ##
   ## ccg-res ##
-# create joint-outcomes
-d_ccg_res_dt[d_s_GHG <= 0 & d_s_cgrain >= 0, target := 'w-w'] # w-w
-d_ccg_res_dt[d_s_GHG <= 0 & d_s_cgrain < 0,  target := 'w-l'] # w-l
-d_ccg_res_dt[d_s_GHG > 0 & d_s_cgrain >= 0,  target := 'l-w'] # l-w
-d_ccg_res_dt[d_s_GHG > 0 & d_s_cgrain < 0,   target := 'l-l'] # l-l
-# make target a factor
-d_ccg_res_dt[, target := as.factor(target)]
-
-# make crop a factor
-d_ccg_res_dt[, crop := as.factor(crop)]
-
-# make irr a factor
-d_ccg_res_dt[, irr  := as.factor(irr)]
-
-# combine N amounts, drop individual features
-d_ccg_res_dt[, Namt := fertN.amt + orgN.amt]
-d_ccg_res_dt = d_ccg_res_dt[, -c('fertN.amt', 'orgN.amt')]
-
+{
+# # create joint-outcomes
+# d_ccg_res_dt[d_s_GHG <= 0 & d_s_cgrain >= 0, target := 'w-w'] # w-w
+# d_ccg_res_dt[d_s_GHG <= 0 & d_s_cgrain < 0,  target := 'w-l'] # w-l
+# d_ccg_res_dt[d_s_GHG > 0 & d_s_cgrain >= 0,  target := 'l-w'] # l-w
+# d_ccg_res_dt[d_s_GHG > 0 & d_s_cgrain < 0,   target := 'l-l'] # l-l
+# # make target a factor
+# d_ccg_res_dt[, target := as.factor(target)]
+# 
+# # make crop a factor
+# d_ccg_res_dt[, crop := as.factor(crop)]
+# 
+# # make irr a factor
+# d_ccg_res_dt[, irr  := as.factor(irr)]
+# 
+# # combine N amounts, drop individual features
+# d_ccg_res_dt[, Namt := fertN.amt + orgN.amt]
+# d_ccg_res_dt = d_ccg_res_dt[, -c('fertN.amt', 'orgN.amt')]
+}
   ## ccl-res ##
-# create joint-outcomes
-d_ccl_res_dt[d_s_GHG <= 0 & d_s_cgrain >= 0, target := 'w-w'] # w-w
-d_ccl_res_dt[d_s_GHG <= 0 & d_s_cgrain < 0,  target := 'w-l'] # w-l
-d_ccl_res_dt[d_s_GHG > 0 & d_s_cgrain >= 0,  target := 'l-w'] # l-w
-d_ccl_res_dt[d_s_GHG > 0 & d_s_cgrain < 0,   target := 'l-l'] # l-l
-# make target a factor
-d_ccl_res_dt[, target := as.factor(target)]
-
-# make crop a factor
-d_ccl_res_dt[, crop := as.factor(crop)]
-
-# make irr a factor
-d_ccl_res_dt[, irr  := as.factor(irr)]
-
-# combine N amounts, drop individual features
-d_ccl_res_dt[, Namt := fertN.amt + orgN.amt]
-d_ccl_res_dt = d_ccl_res_dt[, -c('fertN.amt', 'orgN.amt')]
-
+{
+# # create joint-outcomes
+# d_ccl_res_dt[d_s_GHG <= 0 & d_s_cgrain >= 0, target := 'w-w'] # w-w
+# d_ccl_res_dt[d_s_GHG <= 0 & d_s_cgrain < 0,  target := 'w-l'] # w-l
+# d_ccl_res_dt[d_s_GHG > 0 & d_s_cgrain >= 0,  target := 'l-w'] # l-w
+# d_ccl_res_dt[d_s_GHG > 0 & d_s_cgrain < 0,   target := 'l-l'] # l-l
+# # make target a factor
+# d_ccl_res_dt[, target := as.factor(target)]
+# 
+# # make crop a factor
+# d_ccl_res_dt[, crop := as.factor(crop)]
+# 
+# # make irr a factor
+# d_ccl_res_dt[, irr  := as.factor(irr)]
+# 
+# # combine N amounts, drop individual features
+# d_ccl_res_dt[, Namt := fertN.amt + orgN.amt]
+# d_ccl_res_dt = d_ccl_res_dt[, -c('fertN.amt', 'orgN.amt')]
+}
   ## ccg-ntill ##
-# create joint-outcomes
-d_ccg_ntill_dt[d_s_GHG <= 0 & d_s_cgrain >= 0, target := 'w-w'] # w-w
-d_ccg_ntill_dt[d_s_GHG <= 0 & d_s_cgrain < 0,  target := 'w-l'] # w-l
-d_ccg_ntill_dt[d_s_GHG > 0 & d_s_cgrain >= 0,  target := 'l-w'] # l-w
-d_ccg_ntill_dt[d_s_GHG > 0 & d_s_cgrain < 0,   target := 'l-l'] # l-l
-# make target a factor
-d_ccg_ntill_dt[, target := as.factor(target)]
-
-# make crop a factor
-d_ccg_ntill_dt[, crop := as.factor(crop)]
-
-# make irr a factor
-d_ccg_ntill_dt[, irr  := as.factor(irr)]
-
-# combine N amounts, drop individual features
-d_ccg_ntill_dt[, Namt := fertN.amt + orgN.amt]
-d_ccg_ntill_dt = d_ccg_ntill_dt[, -c('fertN.amt', 'orgN.amt')]
-
+{
+# # create joint-outcomes
+# d_ccg_ntill_dt[d_s_GHG <= 0 & d_s_cgrain >= 0, target := 'w-w'] # w-w
+# d_ccg_ntill_dt[d_s_GHG <= 0 & d_s_cgrain < 0,  target := 'w-l'] # w-l
+# d_ccg_ntill_dt[d_s_GHG > 0 & d_s_cgrain >= 0,  target := 'l-w'] # l-w
+# d_ccg_ntill_dt[d_s_GHG > 0 & d_s_cgrain < 0,   target := 'l-l'] # l-l
+# # make target a factor
+# d_ccg_ntill_dt[, target := as.factor(target)]
+# 
+# # make crop a factor
+# d_ccg_ntill_dt[, crop := as.factor(crop)]
+# 
+# # make irr a factor
+# d_ccg_ntill_dt[, irr  := as.factor(irr)]
+# 
+# # combine N amounts, drop individual features
+# d_ccg_ntill_dt[, Namt := fertN.amt + orgN.amt]
+# d_ccg_ntill_dt = d_ccg_ntill_dt[, -c('fertN.amt', 'orgN.amt')]
+}
   ## ccl-ntill ##
+{
 # create joint-outcomes
 d_ccl_ntill_dt[d_s_GHG <= 0 & d_s_cgrain >= 0, target := 'w-w'] # w-w
 d_ccl_ntill_dt[d_s_GHG <= 0 & d_s_cgrain < 0,  target := 'w-l'] # w-l
@@ -247,39 +260,49 @@ d_ccl_ntill_dt[, irr  := as.factor(irr)]
 # combine N amounts, drop individual features
 d_ccl_ntill_dt[, Namt := fertN.amt + orgN.amt]
 d_ccl_ntill_dt = d_ccl_ntill_dt[, -c('fertN.amt', 'orgN.amt')]
+}
 #-----------------------------------------------------------------------------------------
 # Remove MINERL_sum_ and NITRAT_sum_ outliers by quantile
 #-----------------------------------------------------------------------------------------
+### Uncomment as required to run each scenario ##
+
   ## ccg-res ##
+{
 # minerl_q     = quantile(d_ccg_res_dt[, MINERL_sum_], probs = seq(0,1, 0.01))
 # d_ccg_res_dt = d_ccg_res_dt[MINERL_sum_ <= minerl_q[[100]] & MINERL_sum_ > minerl_q[[1]],]
 # 
 # nitrate_q = quantile(d_ccg_res_dt[, NITRAT_sum_], probs = seq(0,1, 0.01))
 # d_ccg_res_dt = d_ccg_res_dt[NITRAT_sum_ <= nitrate_q[[100]] & NITRAT_sum_ > nitrate_q[[1]],]
-
+}
   ## ccl-res ##
+{
 # minerl_q     = quantile(d_ccl_res_dt[, MINERL_sum_], probs = seq(0,1, 0.01))
 # d_ccl_res_dt = d_ccl_res_dt[MINERL_sum_ <= minerl_q[[100]] & MINERL_sum_ > minerl_q[[1]],]
 # 
 # nitrate_q = quantile(d_ccl_res_dt[, NITRAT_sum_], probs = seq(0,1, 0.01))
 # d_ccl_res_dt = d_ccl_res_dt[NITRAT_sum_ <= nitrate_q[[100]] & NITRAT_sum_ > nitrate_q[[1]],]
-
+}
   ## ccg-ntill ##
+{
 # minerl_q       = quantile(d_ccg_ntill_dt[, MINERL_sum_], probs = seq(0,1, 0.01))
 # d_ccg_ntill_dt = d_ccg_ntill_dt[MINERL_sum_ <= minerl_q[[100]] & MINERL_sum_ > minerl_q[[1]],]
 # 
 # nitrate_q     = quantile(d_ccg_ntill_dt[, NITRAT_sum_], probs = seq(0,1, 0.01))
 # d_ccg_ntill_dt = d_ccg_ntill_dt[NITRAT_sum_ <= nitrate_q[[100]] & NITRAT_sum_ > nitrate_q[[1]],]
-
+}
   ## ccl-ntill ##
+{
 minerl_q       = quantile(d_ccl_ntill_dt[, MINERL_sum_], probs = seq(0,1, 0.01))
 d_ccl_ntill_dt = d_ccl_ntill_dt[MINERL_sum_ <= minerl_q[[100]] & MINERL_sum_ > minerl_q[[1]],]
 
 nitrate_q      = quantile(d_ccl_ntill_dt[, NITRAT_sum_], probs = seq(0,1, 0.01))
 d_ccl_ntill_dt = d_ccl_ntill_dt[NITRAT_sum_ <= nitrate_q[[100]] & NITRAT_sum_ > nitrate_q[[1]],]
+}
 #-----------------------------------------------------------------------------------------
 # RANDOM FOREST & SHAP
 #-----------------------------------------------------------------------------------------
+### Uncomment as required to run each scenario ##
+
 # ccg_res_SHAP = rf_shap(d_ccg_res_dt)
 # save(ccg_res_SHAP,  file = paste(out_p, "ccg_res_SHAP.Rdata", sep = '/'))
 # 
@@ -291,24 +314,3 @@ d_ccl_ntill_dt = d_ccl_ntill_dt[NITRAT_sum_ <= nitrate_q[[100]] & NITRAT_sum_ > 
  
 ccl_ntill_SHAP = rf_shap(d_ccl_ntill_dt)
 save(ccl_ntill_SHAP,  file = paste(out_p, "ccl_ntill_SHAP.Rdata", sep = '/'))
-
-
-# test_viz = shapviz(ccg_ntill_SHAP$overall_SHAP)
-# sv_importance(test_viz) # overall
-# sv_dependence(test_viz, 'crop', color_var = NULL)
-# 
-# test_ww_viz = shapviz(ccg_ntill_SHAP$class_SHAP[['w-w']])
-# sv_importance(test_ww_viz)
-# sv_dependence(test_ww_viz, 'NITRAT_sum_', color_var = NULL)
-# 
-# test_wl_viz = shapviz(ccg_ntill_SHAP$class_SHAP[['w-l']])
-# sv_importance(test_wl_viz)
-# sv_dependence(test_wl_viz, 'crop', color_var = NULL)
-# 
-# test_lw_viz = shapviz(ccg_ntill_SHAP$class_SHAP[['l-w']])
-# sv_importance(test_lw_viz)
-# sv_dependence(test_lw_viz, 'Namt', color_var = NULL)
-# 
-# test_ll_viz = shapviz(ccg_ntill_SHAP$class_SHAP[['l-l']])
-# sv_importance(test_ll_viz)
-# sv_dependence(test_ll_viz, 'SLBLKD', color_var = NULL)
