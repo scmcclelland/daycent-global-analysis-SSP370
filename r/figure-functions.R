@@ -224,7 +224,7 @@ ghg_map_fig     = function(dt) {
                                   colors = colors_bar2,
                                   legend_title = expression(GHG~Difference~'('~Mg~CO[2]*-eq~ha^-1*~yr^-1*')'),
                                   spacing = 'constant',
-                                  font_size = 4)
+                                  font_size = 2)
   gg_legend1
 
   gg_maps = list(N2O = gg_N2O, SOC = gg_SOC, GHG = gg_GHG, legend1 = gg_legend1)
@@ -319,7 +319,7 @@ yield_map_fig   = function(dt) {
                                   colors = colors_bar2,
                                   legend_title = expression(Yield~Difference~'('~kg~ha^-1*~yr^-1*')'),
                                   spacing = 'constant',
-                                  font_size = 4)
+                                  font_size = 2)
   gg_legend2
   
   gg_maps = list(grain = gg_gr, legend2 = gg_legend2)
@@ -373,10 +373,8 @@ cont_pdp = function(shv, sv_imp, color_hex, ft_name, shv_name, lbl) {
           strip.text = element_text(size = 6, color = 'black'))
   cont_gg = cont_gg + theme(
     plot.title.position = "plot",  # This moves the title to align with plot edge
-    plot.title = element_text(
-      hjust = -0.01,  # Slight adjustment left of the plot
-      vjust = -0.5,   # Slight adjustment above the plot
-      size = 7       # Match your other text size if needed
+    plot.subtitle = element_text(
+      size = 6       # Match other text size if needed
     )
   ) +
     ggtitle('', lbl)
@@ -408,10 +406,8 @@ cat_gg = ggplot(df, aes(x = feature_value, y = shap_value)) +
           strip.text = element_text(size = 6, color = 'black'))
 cat_gg = cat_gg + theme(
   plot.title.position = "plot",  # This moves the title to align with plot edge
-  plot.title = element_text(
-    hjust = -0.01,  # Slight adjustment left of the plot
-    vjust = -0.5,   # Slight adjustment above the plot
-    size = 7       # Match your other text size if needed
+  plot.subtitle = element_text(
+    size = 6       # Match other text size if needed
   )
 ) +
   ggtitle('', lbl)
@@ -598,6 +594,149 @@ IPCC_map          = function(.lu_path, .shp_f, .raster) {
 #-----------------------------------------------------------------------------------------
 # figures-extended-data
 #-----------------------------------------------------------------------------------------
+bivariate_map_fig  = function(dt) {
+  # subset dt
+  dt = dt[, .(scenario, y_block, gridid, d_s_GHG, d_s_cgrain)]
+  # set xy
+  dt_r = as.data.frame(dt, xy = TRUE)
+  setDT(dt_r)
+  
+  # create manual breaks
+  quants.GHG  = dt_r[, quantile(d_s_GHG,seq.int(0,1,length.out = 3), na.rm = TRUE)]
+  quants.yld  = dt_r[, quantile(d_s_cgrain,seq.int(0,1,length.out = 3), na.rm = TRUE)]
+  # make manual quantiles
+  ghg.quants = c(-Inf,-0.0001,0.0001,Inf)
+  yld.quants = c(-Inf,-0.0001,0.0001,Inf)
+  dt_r[, quant.cuts.GHG := cut(d_s_GHG,    breaks = ghg.quants)]
+  dt_r[, quant.cuts.YLD := cut(d_s_cgrain, breaks = yld.quants)]
+  
+  # create raster
+  dt_r = as.data.frame(dt_r, xy = TRUE)
+  r                = rast(nrow = 360, ncol = 720, nlyr = 2, xmin = -180, xmax = 180, ymin = -90, ymax = 90)
+  crs(r)           = "epsg:4326"
+  
+  # original projection
+  r_lat_ghg = rast(res = 0.5, nlyr = 2, extent = ext(r), crs = crs(r)) 
+  r_lat_ghg[[1]][dt_r$gridid] = dt_r$quant.cuts.GHG
+  r_lat_ghg[[2]][dt_r$gridid] = dt_r$quant.cuts.YLD
+  names(r_lat_ghg) = c('d_s_GHG', 'd_s_cgrain')
+  
+  # equal area projection
+  newcrs = "+proj=eck4 +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs"
+  
+  # get new output dimensions
+  project(r_lat_ghg, newcrs)
+  # dimensions  : 569, 1138, 2  (nrow, ncol, nlyr)
+  # resolution  : 29727.52, 29727.52  (x, y)
+  # extent      : -16921203, 16908719, -8454359, 8460601  (xmin, xmax, ymin, ymax)
+  r_newcrs   = rast(ncols = 1138, nrows = 569, nlyr = 2, xmin = -16921203, xmax = 16908719, ymin = -8454359, ymax = 8460601, crs = newcrs)
+  r_eckiv    = project(r_lat_ghg, r_newcrs)
+  
+  r_eckiv_dt = as.data.frame(r_eckiv, cells = TRUE, xy = TRUE)
+  r_eckiv_dt = setDT(r_eckiv_dt)
+  r_eckiv_dt_GHG = r_eckiv_dt[,.(cell, x, y, d_s_GHG, d_s_cgrain)]
+  r_eckiv_dt_GHG[, d_s_GHG := round(d_s_GHG, digits = 0)]
+  r_eckiv_dt_GHG[, d_s_GHG := as.character(d_s_GHG)]
+  r_eckiv_dt_GHG[, d_s_cgrain := round(d_s_cgrain, digits = 0)]
+  r_eckiv_dt_GHG[, d_s_cgrain := as.character(d_s_cgrain)]
+  # create manual levels here: 1-9
+  # ghg = var1 (vertical)
+  # yld = var2 (horizontal)
+  
+  # a1 = (ghg-emit)(y-loss) | 1, 1
+  # a2 = (ghg-n)(y-loss) | 2, 1
+  # a3 = (ghg-mit)(y-loss) | 3, 1
+  # b1 = (ghg-emit)(y-n) | 1, 2
+  # b2 = (ghg-n)(y-n) | 2, 2
+  # b3 = (ghg-mit)(y-n) | 3, 2
+  # c1 = (ghg-emit)(y-high) | 1, 3
+  # c2 = (ghg-n)(y-high) | 2, 3
+  # c3 = (ghg-mit)(y-high) | 3, 3
+  r_eckiv_dt_GHG[d_s_GHG == 1 & d_s_cgrain == 1, m_class := 'a1']
+  r_eckiv_dt_GHG[d_s_GHG == 2 & d_s_cgrain == 1, m_class := 'a2']
+  r_eckiv_dt_GHG[d_s_GHG == 3 & d_s_cgrain == 1, m_class := 'a3']
+  r_eckiv_dt_GHG[d_s_GHG == 1 & d_s_cgrain == 2, m_class := 'b1']
+  r_eckiv_dt_GHG[d_s_GHG == 2 & d_s_cgrain == 2, m_class := 'b2']
+  r_eckiv_dt_GHG[d_s_GHG == 3 & d_s_cgrain == 2, m_class := 'b3']
+  r_eckiv_dt_GHG[d_s_GHG == 1 & d_s_cgrain == 3, m_class := 'c1']
+  r_eckiv_dt_GHG[d_s_GHG == 2 & d_s_cgrain == 3, m_class := 'c2']
+  r_eckiv_dt_GHG[d_s_GHG == 3 & d_s_cgrain == 3, m_class := 'c3']
+  r_eckiv_dt_GHG = r_eckiv_dt_GHG[!is.na(m_class)]
+  
+  # create sf object
+  data(wrld_simpl)
+  wrld_simpl_sf = sf::st_as_sf(wrld_simpl)
+  wrld_simpl_sf_eckiv = st_transform(wrld_simpl_sf, crs = newcrs)
+  wrld_simpl_sf_eckiv = wrld_simpl_sf_eckiv[wrld_simpl_sf_eckiv$NAME != 'Antarctica',]
+  
+  small_islands       = wrld_simpl_sf[wrld_simpl_sf$AREA < 10000,]
+  remove              = c('Antigua and Barbuda', 'American Samoa', 'Barbados', 'Bermuda',
+                          'Bahamas', 'Solomon Islands', 'Cayman Islands', 'Comoros','Cook Islands', 'Cape Verde',
+                          'Dominica', 'Fiji','Falkland Islands (Malvinas)', 'Micronesia, Federated States of', 'Grenada',
+                          'New Caledonia', 'Niue', 'Anguilla','French Polynesia', 'Guam', 'Kiribati', 'Martinique','Maldives', 'Aruba', 'Northern Mariana Islands',
+                          'Faroe Islands', 'Mayotte', 'Mauritius','Aaland Islands', 'Norfolk Island', 'Cocos (Keeling) Islands',
+                          'Bouvet Island', 'French Southern and Antarctic Lands', 'Heard Island and McDonald Islands',
+                          'British Indian Ocean Territory', 'Christmas Island', 'Vanuatu','United States Minor Outlying Islands',
+                          'Nauru', 'Reunion', 'Saint Kitts and Nevis', 'Seychelles', 'Saint Lucia', 'Tokelau', 'Tonga',
+                          'Tuvalu','Saint Vincent and the Grenadines', 'British Virgin Islands', 'United States Virgin Islands',
+                          'Wallis and Futuna Islands', 'Samoa', 'Guadeloupe', 'Netherlands Antilles', 'Pitcairn Islands','
+                          Palau', 'Marshall Islands', 'Saint Pierre and Miquelon', 'Saint Helena', 'San Marino',
+                          'Turks and Caicos Islands', 'Svalbard', 'Saint Martin', 'Saint Barthelemy', 'South Georgia South Sandwich Islands',
+                          'Guernsey', 'Jersey')
+  wrld_simpl_sf_eckiv = wrld_simpl_sf_eckiv[!wrld_simpl_sf_eckiv$NAME %in% remove,]
+  
+  bivar_c = c('a1' = "#e8e8e8", 'a2'  = "#dfb0d6", 'a3'  = "#be64ac", 
+              'b1' = "#ace4e4",  'b2' = "#a5add3", 'b3'  = "#8c62aa",
+              'c1' = "#5ac8c8", 'c2'  = "#5698b9", 'c3'  = "#3b4994")
+
+  # BBOX
+  # xmin      ymin      xmax      ymax 
+  # -15861702  -6637514  15337601   8373855 
+  
+  # create maps
+  gg_bivar = ggplot() + 
+    geom_sf(data = wrld_simpl_sf_eckiv, fill = "grey75",
+            colour = "grey45", size = 0.2) +
+    theme_map() +
+    geom_tile(data = r_eckiv_dt_GHG[,.(cell, x, y, m_class)],
+              aes(x = x, y = y, fill = m_class)) +
+    scale_fill_manual(values = bivar_c) +
+    theme(legend.position='none',
+          plot.margin = unit(c(0,0,0,0), "null"),
+          axis.ticks = element_blank())
+  gg_bivar
+  
+  # legend
+  # Create the legend plot
+  bivar_c_dt = unique(r_eckiv_dt_GHG[, .(d_s_GHG, d_s_cgrain, m_class)])
+  setorder(bivar_c_dt, m_class)
+  bivar_c_dt[, b_colors := as.vector(bivar_c)]
+  
+  # Create the legend plot
+  gg_legend = ggplot(bivar_c_dt, aes(x = factor(d_s_cgrain), y = factor(d_s_GHG))) +
+    geom_tile(aes(fill = b_colors), color = "black", linewidth = 0.5) +
+    scale_fill_identity() +
+    theme_minimal() +
+    theme(
+      panel.grid  = element_blank(),
+      axis.text.x  = element_text(angle = 0, size = 6),
+      axis.text.y  = element_text(angle = 90, size = 6, hjust = 0.5),
+      axis.title.y = element_text(angle = 90, size = 7),
+      axis.title.x = element_text(size = 7),
+      axis.ticks = element_blank()
+    ) +
+    coord_fixed() +
+    xlab('Yield') +
+    ylab('Greenhouse Gas') +
+    scale_x_discrete(labels = c("Lower", "", "Higher")) +
+    scale_y_discrete(labels = c("Emissions", "", "Mitigation")) 
+  gg_legend
+  
+  gg_maps = list(bivariate = gg_bivar, legend = gg_legend)
+  return(gg_maps)
+  
+}
+
 # ghg_map_fig
 # yield_map_fig
 bmp_scatterplot_fig = function(dt, constant) {
@@ -733,7 +872,7 @@ cov_ghg_map_fig     = function(dt) {
                                   colors = colors_bar2,
                                   legend_title = expression(GHG~Emissions~CoV~'('~'%'~')'), # fix
                                   spacing = 'constant',
-                                  font_size = 4)
+                                  font_size = 2)
   gg_legend1
   
   gg_maps = list(GHG = gg_GHG, legend1 = gg_legend1)
@@ -825,128 +964,210 @@ cov_yield_map_fig   = function(dt) {
                                   colors = colors_bar2,
                                   legend_title = expression(Yield~CoV~'('~'%'~')'),
                                   spacing = 'constant',
-                                  font_size = 4)
+                                  font_size = 2)
   gg_legend2
   
   
   gg_maps = list(grain = gg_gr, legend2 = gg_legend2)
   return(gg_maps)
 }
-barplot_fig     = function(dt) {
-  scenario_lbl = c('ccg-res' = c('Grass CC'),
+bwplot_fig          = function(dt, dt_w, response) {
+  scenario_lbl  = c('ccg-res' = c('Grass CC'),
                    'ccl-res' = c('Legume CC'), 
                    'ccg-ntill' = c('Grass CC + Ntill'),
                    'ccl-ntill' = c('Legume CC + Ntill'))
-  dt$scenario  = factor(dt$scenario, levels = c('ccg-res', 'ccg-ntill', 'ccl-res', 'ccl-ntill'))
-  ipcc_lbl     = c('GLB'   = c('GLOBE'),
+  dt$scenario   = factor(dt$scenario, levels = c('ccg-res', 'ccg-ntill', 'ccl-res', 'ccl-ntill'))
+  dt_w$scenario = factor(dt_w$scenario, levels = c('ccg-res', 'ccg-ntill', 'ccl-res', 'ccl-ntill'))
+  ipcc_lbl      = c('GLB'   = c('GLOBE'),
                    'ADP'   = c('ADP'),
                    'AME'   = c('AME'),
                    'DEV'   = c('DEV'),
                    'EEWCA' = c('EEWCA'),
                    'LAC'   = c('LAC'))
-  dt$IPCC_NAME = factor(dt$IPCC_NAME, levels = c('GLB', 'ADP', 'AME', 'DEV', 'EEWCA', 'LAC'))
-
-  gg1 = ggplot(dt, aes(x = scenario, y = d_s_GHG, group = interaction(scenario, IPCC_NAME), 
-                       fill = IPCC_NAME)) +
-    geom_bar(stat = 'identity', position = position_dodge(), width = 0.8) +
-    geom_errorbar(aes(ymin= d_s_GHG - se_s_GHG, ymax = d_s_GHG + se_s_GHG), 
-                  width=.4, position=position_dodge(0.8)) +
-    coord_flip() +
-    geom_hline(yintercept = 0) +
-    scale_x_discrete(labels = scenario_lbl, limits = c('ccl-ntill','ccl-res', 
-                                                       'ccg-ntill', 'ccg-res')) +
-    ylab((expression(atop(paste(Annual~GHG~Mitigation~Potential), '('*Mg~CO[2]*-eq*~ha^-1*~yr^-1*')')))) +
-    scale_y_continuous(limits = c(-3,4), breaks = seq(-3,4, 0.5)) +
-    scale_fill_manual(name = 'Region', labels = ipcc_lbl, values = c("#913640","#040404",
-                                                                              "#4B4C40",
-                                                                              "#CC79A7",
-                                                                              "#928261",
-                                                                              "#EAAD89")) +
-   theme_bw() +
-    theme(text         = element_text(color = 'black', size = 7),
-          axis.text    = element_text(size = 7, color = 'black'),
-          strip.text   = element_text(size = 6, color = 'black'),
-          axis.title.y = element_blank(),
-          legend.position  = 'bottom') +
-    guides(fill = guide_legend(title.position = "top", ncol = 1))
-  gg1
-  
-  gg2 = ggplot(dt, aes(x = scenario, y = d_s_SOC, group = interaction(scenario, IPCC_NAME), 
-                       fill = IPCC_NAME)) +
-    geom_bar(stat = 'identity', position = position_dodge(), width = 0.8) +
-    geom_errorbar(aes(ymin= d_s_SOC - se_s_SOC, ymax = d_s_SOC + se_s_SOC), 
-                  width=.4, position=position_dodge(0.8)) +
-    coord_flip() +
-    geom_hline(yintercept = 0) +
-    scale_x_discrete(labels = scenario_lbl, limits = c('ccl-ntill','ccl-res', 
-                                                       'ccg-ntill', 'ccg-res')) +
-    ylab((expression(atop(paste(Annual~SOC~Sequestration), '('*Mg~CO[2]*-eq*~ha^-1*~yr^-1*')')))) +
-    scale_y_continuous(limits = c(0,5), breaks = seq(0,5, 1)) +
-    scale_fill_manual(name = 'Region', labels = ipcc_lbl, values = c("#913640","#040404",
-                                                                              "#4B4C40",
-                                                                              "#CC79A7",
-                                                                              "#928261",
-                                                                              "#EAAD89")) +
-    theme_bw() +
-    theme(text         = element_text(color = 'black', size = 7),
-          axis.text    = element_text(size = 7, color = 'black'),
-          strip.text   = element_text(size = 6, color = 'black'),
-          axis.title.y = element_blank(),
-          legend.position  = 'bottom') +
-    guides(fill = guide_legend(title.position = "top", ncol = 1))
-  gg2
-  
-  gg3 = ggplot(dt, aes(x = scenario, y = d_s_N2O, group = interaction(scenario, IPCC_NAME), 
-                       fill = IPCC_NAME)) +
-    geom_bar(stat = 'identity', position = position_dodge(), width = 0.8) +
-    geom_errorbar(aes(ymin= d_s_N2O - se_s_N2O, ymax = d_s_N2O + se_s_N2O), 
-                  width=.4, position=position_dodge(0.8)) +
-    coord_flip() +
-    geom_hline(yintercept = 0) +
-    scale_x_discrete(labels = scenario_lbl, limits = c('ccl-ntill','ccl-res', 
-                                                       'ccg-ntill', 'ccg-res')) +
+  dt$IPCC_NAME    = factor(dt$IPCC_NAME, levels = c('GLB', 'ADP', 'AME', 'DEV', 'EEWCA', 'LAC'))
+  dt_w$IPCC_NAME  = factor(dt_w$IPCC_NAME, levels = c('GLB', 'ADP', 'AME', 'DEV', 'EEWCA', 'LAC'))
+  # update y_block label
+  dt_w[, y_block := as.factor(y_block)]
+  dt_w[y_block == '2050', y_block := '2016-2050']
+  dt_w[y_block == '2100', y_block := '2016-2100']
+  dt[, y_block := as.factor(y_block)]
+  dt[y_block == '2050', y_block := '2016-2050']
+  dt[y_block == '2100', y_block := '2016-2100']
+  if(response == 'GHG') {
+    gg1 = ggplot(dt_w, aes(x = scenario, color = scenario)) +
+      facet_wrap(IPCC_NAME~y_block, ncol = 4) +
+      geom_boxplot(aes(ymin   = min_GHG,
+                       lower  = Q1_GHG,
+                       middle = median_GHG,
+                       upper  = Q3_GHG,
+                       ymax   = max_GHG), 
+                   stat = "identity", fill = "white") +
+      coord_flip() +
+      scale_y_continuous(limits = c(-6,8), breaks = seq(-6,8, 2)) +
+      # Add standard error
+      geom_linerange(data = dt,
+                    aes(x = scenario, 
+                        ymin = d_s_GHG - se_s_GHG,
+                        ymax = d_s_GHG + se_s_GHG),
+                    size = 1.75,
+                    alpha = 0.9,
+                    color = "grey40") +
+      # Add points for means
+      geom_point(data = dt, 
+                 aes(x = scenario, y = d_s_GHG), 
+                 position = position_dodge(width = 0.75),
+                 shape = 4,
+                 size = 1.5, color = "black") +
+      geom_hline(yintercept = 0) +
+      scale_x_discrete(labels = scenario_lbl, limits = c('ccl-ntill','ccl-res', 
+                                                         'ccg-ntill', 'ccg-res')) +
+      ylab((expression(atop(paste(Annual~GHG~Mitigation~Potential), '('*Mg~CO[2]*-eq*~ha^-1*~yr^-1*')')))) +
+      scale_color_manual(labels = scenario_lbl, values = c('ccg-res'   = "#8B0069",
+                                                          'ccl-res'   = "#A75529",
+                                                          'ccg-ntill' = "#9A9800", 
+                                                          'ccl-ntill' = "#5DD291")) +
+      theme_bw() +
+      theme(text         = element_text(color = 'black', size = 7),
+            axis.text    = element_text(size = 7, color = 'black'),
+            strip.text   = element_text(size = 6, color = 'black'),
+            axis.title.y = element_blank(),
+            legend.position  = 'right',
+            legend.title     = element_blank()) +
+      guides(fill = guide_legend(title.position = "top", ncol = 1))
+    return(list(ghg = gg1))
+  } else if (response == 'SOC') {
+    gg2 = ggplot(dt_w, aes(x = scenario, color = scenario)) +
+      facet_wrap(IPCC_NAME~y_block, ncol = 4) +
+      geom_boxplot(aes(ymin   = min_SOC,
+                       lower  = Q1_SOC,
+                       middle = median_SOC,
+                       upper  = Q3_SOC,
+                       ymax   = max_SOC), 
+                   stat = "identity", fill = "white") +
+      coord_flip() +
+      scale_y_continuous(limits = c(-6,8), breaks = seq(-6,8, 2)) +
+      # Add standard error
+      geom_linerange(data = dt,
+                     aes(x = scenario, 
+                         ymin = d_s_SOC - se_s_SOC,
+                         ymax = d_s_SOC + se_s_SOC),
+                     size = 1.75,
+                     alpha = 0.9,
+                     color = "grey40") +
+      # Add points for means
+      geom_point(data = dt, 
+                 aes(x = scenario, y = d_s_SOC), 
+                 position = position_dodge(width = 0.75),
+                 shape = 4,
+                 size = 1.5, color = "black") +
+      geom_hline(yintercept = 0) +
+      scale_x_discrete(labels = scenario_lbl, limits = c('ccl-ntill','ccl-res', 
+                                                         'ccg-ntill', 'ccg-res')) +
+      ylab((expression(atop(paste(Annual~SOC~Sequestration), '('*Mg~CO[2]*-eq*~ha^-1*~yr^-1*')')))) +
+      scale_color_manual(labels = scenario_lbl, values = c('ccg-res'   = "#8B0069",
+                                                           'ccl-res'   = "#A75529",
+                                                           'ccg-ntill' = "#9A9800", 
+                                                           'ccl-ntill' = "#5DD291")) +
+      theme_bw() +
+      theme(text         = element_text(color = 'black', size = 7),
+            axis.text    = element_text(size = 7, color = 'black'),
+            strip.text   = element_text(size = 6, color = 'black'),
+            axis.title.y = element_blank(),
+            legend.position  = 'right',
+            legend.title     = element_blank()) +
+      guides(fill = guide_legend(title.position = "top", ncol = 1))
+    
+    return(list(soc = gg2))
+  } else if (response == 'N2O') {
+    gg3 = ggplot(dt_w, aes(x = scenario, color = scenario)) +
+      facet_wrap(IPCC_NAME~y_block, ncol = 4) +
+      geom_boxplot(aes(ymin   = min_N2O,
+                       lower  = Q1_N2O,
+                       middle = median_N2O,
+                       upper  = Q3_N2O,
+                       ymax   = max_N2O), 
+                   stat = "identity", fill = "white") +
+      coord_flip() +
+      scale_y_continuous(limits = c(-8,4), breaks = seq(-8,4, 2)) +
+      # Add standard error
+      geom_linerange(data = dt,
+                     aes(x = scenario, 
+                         ymin = d_s_N2O - se_s_N2O,
+                         ymax = d_s_N2O + se_s_N2O),
+                     size = 1.75,
+                     alpha = 0.9,
+                     color = "grey40") +
+      # Add points for means
+      geom_point(data = dt, 
+                 aes(x = scenario, y = d_s_N2O), 
+                 position = position_dodge(width = 0.75),
+                 shape = 4,
+                 size = 1.5, color = "black") +
+      geom_hline(yintercept = 0) +
+      scale_x_discrete(labels = scenario_lbl, limits = c('ccl-ntill','ccl-res', 
+                                                         'ccg-ntill', 'ccg-res')) +
     ylab((expression(atop(paste(Annual~N2O~Emissions), '('*Mg~CO[2]*-eq*~ha^-1*~yr^-1*')')))) +
-    scale_y_continuous(limits = c(-4,2), breaks = seq(-4,2, 0.5)) +
-    scale_fill_manual(name = 'Region', labels = ipcc_lbl, values = c("#913640","#040404",
-                                                                              "#4B4C40",
-                                                                              "#CC79A7",
-                                                                              "#928261",
-                                                                              "#EAAD89")) +
-    theme_bw() +
-    theme(text         = element_text(color = 'black', size = 7),
-          axis.text    = element_text(size = 7, color = 'black'),
-          strip.text   = element_text(size = 6, color = 'black'),
-          axis.title.y = element_blank(),
-          legend.position  = 'bottom') +
-    guides(fill = guide_legend(title.position = "top", ncol = 1))
-  gg3
+      scale_color_manual(labels = scenario_lbl, values = c('ccg-res'   = "#8B0069",
+                                                           'ccl-res'   = "#A75529",
+                                                           'ccg-ntill' = "#9A9800", 
+                                                           'ccl-ntill' = "#5DD291")) +
+      theme_bw() +
+      theme(text         = element_text(color = 'black', size = 7),
+            axis.text    = element_text(size = 7, color = 'black'),
+            strip.text   = element_text(size = 6, color = 'black'),
+            axis.title.y = element_blank(),
+            legend.position  = 'right',
+            legend.title     = element_blank()) +
+      guides(fill = guide_legend(title.position = "top", ncol = 1))
   
-  gg4 = ggplot(dt, aes(x = scenario, y = d_s_cgrain, group = interaction(scenario, IPCC_NAME), 
-                       fill = IPCC_NAME)) +
-    geom_bar(stat = 'identity', position = position_dodge(), width = 0.8) +
-    geom_errorbar(aes(ymin= d_s_cgrain - se_s_cgrain, ymax = d_s_cgrain + se_s_cgrain), 
-                  width=.4, position=position_dodge(0.8)) +
-    coord_flip() +
-    geom_hline(yintercept = 0) +
-    scale_x_discrete(labels = scenario_lbl, limits = c('ccl-ntill','ccl-res', 
-                                                       'ccg-ntill', 'ccg-res')) +
-    ylab((expression(atop(paste(Annual~Yield~Difference), '('*Mg~ha^-1*~yr^-1*')')))) +
-    scale_y_continuous(limits = c(-2,2), breaks = seq(-2,2, 0.5)) +
-    scale_fill_manual(name = 'Region', labels = ipcc_lbl, values = c("#913640","#040404",
-                                                                              "#4B4C40",
-                                                                              "#CC79A7",
-                                                                              "#928261",
-                                                                              "#EAAD89")) +
-    theme_bw() +
-    theme(text         = element_text(color = 'black', size = 7),
-          axis.text    = element_text(size = 7, color = 'black'),
-          strip.text   = element_text(size = 6, color = 'black'),
-          axis.title.y = element_blank(),
-          legend.position  = 'bottom') +
-    guides(fill = guide_legend(title.position = "top", ncol = 1))
-  gg4
-  
-  return(list(ghg = gg1, soc = gg2, n2o = gg3, yield = gg4))
+    return(list(n2o = gg3))
+  } else if (response == 'yield') {
+    gg4 = ggplot(dt_w, aes(x = scenario, color = scenario)) +
+      facet_wrap(IPCC_NAME~y_block, ncol = 4) +
+      geom_boxplot(aes(ymin   = min_cgrain,
+                       lower  = Q1_cgrain,
+                       middle = median_cgrain,
+                       upper  = Q3_cgrain,
+                       ymax   = max_cgrain), 
+                   stat = "identity", fill = "white") +
+      coord_flip() +
+      scale_y_continuous(limits = c(-3,3), breaks = seq(-3,3, 1)) +
+      # Add standard error
+      geom_linerange(data = dt,
+                     aes(x = scenario, 
+                         ymin = d_s_cgrain - se_s_cgrain,
+                         ymax = d_s_cgrain + se_s_cgrain),
+                     size = 1.75,
+                     alpha = 0.9,
+                     color = "grey40") +
+      # Add points for means
+      geom_point(data = dt, 
+                 aes(x = scenario, y = d_s_cgrain), 
+                 position = position_dodge(width = 0.75),
+                 shape = 4,
+                 size = 1.5, color = "black") +
+      geom_hline(yintercept = 0) +
+      scale_x_discrete(labels = scenario_lbl, limits = c('ccl-ntill','ccl-res', 
+                                                         'ccg-ntill', 'ccg-res')) +
+      ylab((expression(atop(paste(Annual~Yield~Difference), '('*Mg~ha^-1*~yr^-1*')')))) +
+      scale_color_manual(labels = scenario_lbl, values = c('ccg-res'   = "#8B0069",
+                                                           'ccl-res'   = "#A75529",
+                                                           'ccg-ntill' = "#9A9800", 
+                                                           'ccl-ntill' = "#5DD291")) +
+      theme_bw() +
+      theme(text         = element_text(color = 'black', size = 7),
+            axis.text    = element_text(size = 7, color = 'black'),
+            strip.text   = element_text(size = 6, color = 'black'),
+            axis.title.y = element_blank(),
+            legend.position  = 'right',
+            legend.title     = element_blank()) +
+      guides(fill = guide_legend(title.position = "top", ncol = 1))
+    
+    return(list(yield = gg4))
+  } else {
+    print('This is not a valid response. Stopping.')
+    stop()
+  }
 }
 # feature_p
 bmp_regional_fig    = function(dt, reg, g, y, constant) {

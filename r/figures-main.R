@@ -1,6 +1,6 @@
 # filename: figures-main.R
 # created:     19 December 2024
-# updated:     19 February 2025
+# updated:     30 March 2025
 # author:      S.C. McClelland
 # description: This file creates figures included in the main manuscript.
 #-----------------------------------------------------------------------------------------
@@ -107,9 +107,10 @@ fig1_tl = fig1_t$glb + theme(
                         # axis.title.x = element_blank(),
                         # axis.title.y = element_blank(),
                         legend.position = 'none') +
-         guides(color = "none") +
+  xlim(-0.5, 1) + ylim(-0.2, 0.3) +
+  guides(color = "none") +
   # Top left
-  annotate("text", x = -0.25, y = 0.3, label = "Yield-favorable", 
+  annotate("text", x = -0.5, y = 0.3, label = "Yield-favorable", 
            hjust = 0, vjust = 1, size = 2.5) +
   
   # Top right
@@ -117,11 +118,11 @@ fig1_tl = fig1_t$glb + theme(
            hjust = 1, vjust = 1, size = 2.5) +
   
   # Bottom left
-  annotate("text", x = -0.25, y = -0.25, label = "Both unfavorable", 
+  annotate("text", x = -0.5, y = -0.2, label = "Both unfavorable", 
            hjust = 0, vjust = 0, size = 2.5) +
   
   # Bottom right
-  annotate("text", x = 1, y = -0.25, label = "Mitigation-favorable", 
+  annotate("text", x = 1, y = -0.2, label = "Mitigation-favorable", 
            hjust = 1, vjust = 0, size = 2.5)
 # add a label
 fig1_tl = fig1_tl + theme(
@@ -129,7 +130,12 @@ fig1_tl = fig1_tl + theme(
   plot.title = element_text(
     hjust = -0.005,  # Slight adjustment left of the plot
     vjust = -0.5,   # Slight adjustment above the plot
-    size = 9       # Match your other text size if needed
+    size = 7       # Match your other text size if needed
+  ),
+  plot.subtitle = element_text(
+    hjust = -0.005,  # Slight adjustment left of the plot
+    vjust = -0.5,   # Slight adjustment above the plot
+    size = 6       # Match your other text size if needed
   )
 ) +
 ggtitle('Global, near-term (2016-2050)', '(a)')
@@ -138,21 +144,21 @@ fig1_bl = fig1_b$glb + theme(
                         # axis.title.y = element_blank(),
                         # axis.title.x = element_blank(),
                         legend.position = "none") +
-  xlim(-0.5, 0.75) + ylim(-0.15, 0.3) +
+  xlim(-0.5, 1) + ylim(-0.2, 0.3) +
   # Top left
   annotate("text", x = -0.5, y = 0.05, label = "Yield-favorable", 
            hjust = 0, vjust = 1, size = 2.5) +
   
   # Top right
-  annotate("text", x = .75, y = 0.3, label = "Both favorable", 
+  annotate("text", x = 1, y = 0.3, label = "Both favorable", 
            hjust = 1, vjust = 1, size = 2.5) +
   
   # Bottom left
-  annotate("text", x = -0.5, y = -0.15, label = "Both unfavorable", 
+  annotate("text", x = -0.5, y = -0.2, label = "Both unfavorable", 
            hjust = 0, vjust = 0, size = 2.5) +
   
   # Bottom right
-  annotate("text", x = 0.75, y = -0.15, label = "Mitigation-favorable", 
+  annotate("text", x = 1, y = -0.2, label = "Mitigation-favorable", 
            hjust = 1, vjust = 0, size = 2.5)
 # add a label
 fig1_bl = fig1_bl + theme(
@@ -160,7 +166,12 @@ fig1_bl = fig1_bl + theme(
   plot.title = element_text(
     hjust = -0.005,  # Slight adjustment left of the plot
     vjust = -0.5,   # Slight adjustment above the plot
-    size = 9       # Match your other text size if needed
+    size = 7       # Match your other text size if needed
+  ),
+  plot.subtitle = element_text(
+    hjust = -0.005,  # Slight adjustment left of the plot
+    vjust = -0.5,   # Slight adjustment above the plot
+    size = 6       # Match your other text size if needed
   )
 ) +
   ggtitle('Global, medium-term (2016-2100)', '(c)')
@@ -173,9 +184,9 @@ fig1_tr = fig1_t$reg + theme(
                              legend.justification = c(0, 0),
                              legend.box.margin = margin(0, 0, 0, 0)) +
   guides(color = "none") +
-  xlim(-100,450) + ylim(-100,150) +
+  xlim(-200,450) + ylim(-100,150) +
   # Top left
-  annotate("text", x = -100, y = 150, label = "Yield-favorable", 
+  annotate("text", x = -200, y = 150, label = "Yield-favorable", 
            hjust = 0, vjust = 1, size = 2.5) +
   
   # Top right
@@ -183,7 +194,7 @@ fig1_tr = fig1_t$reg + theme(
            hjust = 1, vjust = 1, size = 2.5) +
   
   # Bottom left
-  annotate("text", x = -100, y = -100, label = "Both unfavorable", 
+  annotate("text", x = -200, y = -100, label = "Both unfavorable", 
            hjust = 0, vjust = 0, size = 2.5) +
   
   # Bottom right
@@ -195,7 +206,12 @@ fig1_tr = fig1_tr + theme(
   plot.title = element_text(
     hjust = -0.005,  # Slight adjustment left of the plot
     vjust = -0.5,   # Slight adjustment above the plot
-    size = 9       # Match your other text size if needed
+    size = 7       # Match your other text size if needed
+  ),
+  plot.subtitle = element_text(
+    hjust = -0.005,  # Slight adjustment left of the plot
+    vjust = -0.5,   # Slight adjustment above the plot
+    size = 6       # Match your other text size if needed
   )
 ) +
   ggtitle('Regional, near-term (2016-2050)', '(b)')
@@ -208,13 +224,13 @@ fig1_br = fig1_b$reg + theme(
                              legend.justification = c(0, 1),
                              legend.box.margin = margin(0, 0, 0, 0)) +
   guides(shape = "none") +
-  xlim(-200,300) + ylim(-100,150) +
+  xlim(-200,450) + ylim(-100,150) +
   # Top left
   annotate("text", x = -200, y = 150, label = "Yield-favorable", 
            hjust = 0, vjust = 1, size = 2.5) +
   
   # Top right
-  annotate("text", x = 300, y = 150, label = "Both favorable", 
+  annotate("text", x = 450, y = 150, label = "Both favorable", 
            hjust = 1, vjust = 1, size = 2.5) +
   
   # Bottom left
@@ -222,7 +238,7 @@ fig1_br = fig1_b$reg + theme(
            hjust = 0, vjust = 0, size = 2.5) +
   
   # Bottom right
-  annotate("text", x = 300, y = -100, label = "Mitigation-favorable", 
+  annotate("text", x = 450, y = -100, label = "Mitigation-favorable", 
            hjust = 1, vjust = 0, size = 2.5)
 # add a label
 fig1_br = fig1_br + theme(
@@ -230,7 +246,12 @@ fig1_br = fig1_br + theme(
   plot.title = element_text(
     hjust = -0.005,  # Slight adjustment left of the plot
     vjust = -0.5,   # Slight adjustment above the plot
-    size = 9       # Match your other text size if needed
+    size = 7       # Match your other text size if needed
+  ),
+  plot.subtitle = element_text(
+    hjust = -0.005,  # Slight adjustment left of the plot
+    vjust = -0.5,   # Slight adjustment above the plot
+    size = 6       # Match your other text size if needed
   )
 ) +
   ggtitle('Regional, medium-term (2016-2100)', '(d)')
@@ -286,9 +307,11 @@ ghg_2050 = ghg[y_block == 2050, lapply(.SD, function(x) {x/35}),
 # ccg-res
 ccg_res_ghg_map   = ghg_map_fig(ghg_2050[scenario %in% 'ccg-res'])
 ccg_res_ghg_map$GHG = ccg_res_ghg_map$GHG +
-  annotate("text", x = -Inf, y = Inf, label = "(a)", # top left
-           hjust = 0, vjust = 1, size = 3) +
-  ggtitle('Grass CC')
+  # annotate("text", x = -Inf, y = Inf, label = "(a)", # top left
+  #          hjust = 0, vjust = 1, size = 3) +
+  ggtitle('Grass CC', '(a)') +
+  theme(plot.title    = element_text(size = 7),
+        plot.subtitle = element_text(size = 6))
 ccg_res_ghg_map$legend1 = ccg_res_ghg_map$legend1 +
   theme(
     plot.margin = unit(c(-1, -0.5, -1, -0.5), "cm"),  # Adjust these values as needed
@@ -300,21 +323,27 @@ ccg_res_ghg_map$legend1 = ccg_res_ghg_map$legend1 +
 # ccl-res
 ccl_res_ghg_map   = ghg_map_fig(ghg_2050[scenario %in% 'ccl-res'])
 ccl_res_ghg_map$GHG = ccl_res_ghg_map$GHG +
-  annotate("text", x = -Inf, y = Inf, label = "(e)", # top left
-           hjust = 0, vjust = 1, size = 3) +
-  ggtitle('Legume CC')
+  # annotate("text", x = -Inf, y = Inf, label = "(e)", # top left
+  #          hjust = 0, vjust = 1, size = 3) +
+  ggtitle('Legume CC', '(e)') +
+  theme(plot.title    = element_text(size = 7),
+        plot.subtitle = element_text(size = 6))
 # ccg-ntill
 ccg_ntill_ghg_map = ghg_map_fig(ghg_2050[scenario %in% 'ccg-ntill'])
 ccg_ntill_ghg_map$GHG = ccg_ntill_ghg_map$GHG +
-  annotate("text", x = -Inf, y = Inf, label = "(c)", # top left
-           hjust = 0, vjust = 1, size = 3) +
-  ggtitle('Grass CC + Ntill')
+  # annotate("text", x = -Inf, y = Inf, label = "(c)", # top left
+  #          hjust = 0, vjust = 1, size = 3) +
+  ggtitle('Grass CC + Ntill', '(c)') +
+  theme(plot.title    = element_text(size = 7),
+        plot.subtitle = element_text(size = 6))
 # ccl-ntill
 ccl_ntill_ghg_map = ghg_map_fig(ghg_2050[scenario %in% 'ccl-ntill'])
 ccl_ntill_ghg_map$GHG = ccl_ntill_ghg_map$GHG +
-  annotate("text", x = -Inf, y = Inf, label = "(g)", # top left
-           hjust = 0, vjust = 1, size = 3) +
-  ggtitle('Legume CC + Ntill')
+  # annotate("text", x = -Inf, y = Inf, label = "(g)", # top left
+  #          hjust = 0, vjust = 1, size = 3) +
+  ggtitle('Legume CC + Ntill', '(g)') +
+  theme(plot.title    = element_text(size = 7),
+        plot.subtitle = element_text(size = 6))
 
 # YIELD
 # load data | N.B. does not include imputed values 
@@ -342,8 +371,10 @@ yield_2050 = yield[y_block == 2050, lapply(.SD, function(x) {x/35}),
 # ccg-res
 ccg_res_y_map     = yield_map_fig(yield_2050[scenario %in% 'ccg-res'])
 ccg_res_y_map$grain = ccg_res_y_map$grain +
-  annotate("text", x = -Inf, y = Inf, label = "(b)", # top left
-           hjust = 0, vjust = 1, size = 3) 
+  # annotate("text", x = -Inf, y = Inf, label = "(b)", # top left
+  #          hjust = 0, vjust = 1, size = 3) 
+  ggtitle('', '(b)') +
+  theme(plot.subtitle = element_text(size = 6))
 ccg_res_y_map$legend2 = ccg_res_y_map$legend2 +
   theme(
   plot.margin = unit(c(-1, -0.5, -1, -0.5), "cm"),  # Adjust these values as needed
@@ -355,18 +386,24 @@ ccg_res_y_map$legend2 = ccg_res_y_map$legend2 +
 # ccl-res
 ccl_res_y_map     = yield_map_fig(yield_2050[scenario %in% 'ccl-res'])
 ccl_res_y_map$grain = ccl_res_y_map$grain +
-  annotate("text", x = -Inf, y = Inf, label = "(f)", # top left
-           hjust = 0, vjust = 1, size = 3) 
+  # annotate("text", x = -Inf, y = Inf, label = "(f)", # top left
+  #          hjust = 0, vjust = 1, size = 3) 
+  ggtitle('', '(f)') +
+  theme(plot.subtitle = element_text(size = 6))
 # ccg-ntill
 ccg_ntill_y_map   = yield_map_fig(yield_2050[scenario %in% 'ccg-ntill'])
 ccg_ntill_y_map$grain = ccg_ntill_y_map$grain +
-  annotate("text", x = -Inf, y = Inf, label = "(d)", # top left
-           hjust = 0, vjust = 1, size = 3)
+  # annotate("text", x = -Inf, y = Inf, label = "(d)", # top left
+  #          hjust = 0, vjust = 1, size = 3)
+  ggtitle('', '(d)') +
+  theme(plot.subtitle = element_text(size = 6))
 # ccl-ntill
 ccl_ntill_y_map   = yield_map_fig(yield_2050[scenario %in% 'ccl-ntill'])
 ccl_ntill_y_map$grain = ccl_ntill_y_map$grain +
-  annotate("text", x = -Inf, y = Inf, label = "(h)", # top left
-           hjust = 0, vjust = 1, size = 3)
+  # annotate("text", x = -Inf, y = Inf, label = "(h)", # top left
+  #          hjust = 0, vjust = 1, size = 3)
+  ggtitle('', '(h)') +
+  theme(plot.subtitle = element_text(size = 6))
 
 # Multi-panel figure
 fig2_maps = ccg_res_ghg_map$GHG + ccg_res_y_map$grain + 
@@ -413,7 +450,12 @@ ccg_res_fig = ccg_res_fig + theme(
   plot.title = element_text(
     hjust = -0.01,  # Slight adjustment left of the plot
     vjust = -0.5,   # Slight adjustment above the plot
-    size = 9       # Match your other text size if needed
+    size = 7       # Match your other text size if needed
+  ),
+  plot.subtitle = element_text(
+    hjust = -0.01,  # Slight adjustment left of the plot
+    vjust = -0.5,   # Slight adjustment above the plot
+    size = 6       # Match your other text size if needed
   )
 ) +
   ggtitle("Grass CC", "(a)")
@@ -434,8 +476,13 @@ ccl_res_fig = ccl_res_fig + theme(
   plot.title = element_text(
     hjust = -0.01,  # Slight adjustment left of the plot
     vjust = -0.5,   # Slight adjustment above the plot
-    size = 9       # Match your other text size if needed
-    ),
+    size = 7       # Match your other text size if needed
+  ),
+  plot.subtitle = element_text(
+    hjust = -0.01,  # Slight adjustment left of the plot
+    vjust = -0.5,   # Slight adjustment above the plot
+    size = 6       # Match your other text size if needed
+  ),
   legend.position = 'none'
 ) +
   ggtitle("Legume CC", "(c)")
@@ -456,7 +503,12 @@ ccg_ntill_fig = ccg_ntill_fig + theme(
   plot.title = element_text(
     hjust = -0.01,  # Slight adjustment left of the plot
     vjust = -0.5,   # Slight adjustment above the plot
-    size = 9       # Match your other text size if needed
+    size = 7       # Match your other text size if needed
+  ),
+  plot.subtitle = element_text(
+    hjust = -0.01,  # Slight adjustment left of the plot
+    vjust = -0.5,   # Slight adjustment above the plot
+    size = 6       # Match your other text size if needed
   ),
   legend.position = 'none'
 ) +
@@ -478,7 +530,12 @@ ccl_ntill_fig = ccl_ntill_fig + theme(
   plot.title = element_text(
     hjust = -0.01,  # Slight adjustment left of the plot
     vjust = -0.5,   # Slight adjustment above the plot
-    size = 9       # Match your other text size if needed
+    size = 7       # Match your other text size if needed
+  ),
+  plot.subtitle = element_text(
+    hjust = -0.01,  # Slight adjustment left of the plot
+    vjust = -0.5,   # Slight adjustment above the plot
+    size = 6       # Match your other text size if needed
   ),
   legend.position = 'none'
 ) +
@@ -520,7 +577,10 @@ ccg_res_ft  = c('Cash Crop', 'Water Management', 'Initial Residue Fraction',
 ccg_res_p1  = cont_pdp(ccg_res_shv, as.character(ccg_res_gg$data$feature[1]),
                        f_colors[[4]], bquote(.(ccg_res_ft[[5]])~'('*g~cm^-3*')'), 'SLBLKD',
                        '(a)')
-ccg_res_p1 = ccg_res_p1 + ggtitle('Grass CC', '(a)')
+ccg_res_p1 = ccg_res_p1 + 
+  ggtitle('Grass CC', '(a)') +
+  theme(plot.title    = element_text(size = 7),
+        plot.subtitle = element_text(size = 6))
 # p2
 # check unit below
 ccg_res_p2  = cont_pdp(ccg_res_shv, as.character(ccg_res_gg$data$feature[2]),
@@ -550,7 +610,10 @@ ccg_ntill_ft  = c('Initial Residue Fraction', 'Water Management', 'Initial Soil 
 ccg_ntill_p1  = cont_pdp(ccg_ntill_shv, as.character(ccg_ntill_gg$data$feature[1]),
                        f_colors[[4]], bquote(.(ccg_ntill_ft[[5]])~'('*g~cm^-3*')'), 'SLBLKD',
                        '(f)')
-ccg_ntill_p1  = ccg_ntill_p1 + ggtitle('Grass CC + Ntill', '(f)')
+ccg_ntill_p1  = ccg_ntill_p1 + 
+  ggtitle('Grass CC + Ntill', '(f)') +
+  theme(plot.title    = element_text(size = 7),
+        plot.subtitle = element_text(size = 6))
 # p3
 ccg_ntill_p3  = cont_pdp(ccg_ntill_shv, as.character(ccg_ntill_gg$data$feature[3]),
                          f_colors[[3]], bquote(.(ccg_ntill_ft[[3]])~'('*g~cm^-2*')'), 'NITRAT_sum_',
@@ -583,7 +646,10 @@ ccl_res_ft  = c('Initial Soil Nitrate', 'Nitrogen Inputs', 'Nitrate Fertilizer F
 ccl_res_p1 = cat_pdp(ccl_res_shv, as.character(ccl_res_gg$data$feature[1]),
                      f_colors[[2]], 'Cash Crop', 'crop', '(k)')
 ccl_res_p1 = ccl_res_p1 + scale_x_discrete(labels = c('Maize', 'Soybean', 'Wheat'))
-ccl_res_p1 = ccl_res_p1 + ggtitle('Legume CC', '(k)')
+ccl_res_p1 = ccl_res_p1 + 
+  ggtitle('Legume CC', '(k)') +
+  theme(plot.title    = element_text(size = 7),
+        plot.subtitle = element_text(size = 6))
 # p2
 ccl_res_p2 = cat_pdp(ccl_res_shv, as.character(ccl_res_gg$data$feature[2]),
                      f_colors[[2]], 'Water Management', 'irr','(l)')
@@ -613,7 +679,10 @@ ccl_ntill_p1  = cat_pdp(ccl_ntill_shv, as.character(ccl_ntill_gg$data$feature[1]
                         f_colors[[2]], ccl_ntill_ft[[5]], 'crop',
                         '(p)')
 ccl_ntill_p1 = ccl_ntill_p1 + scale_x_discrete(labels = c('Maize', 'Soybean', 'Wheat'))
-ccl_ntill_p1 = ccl_ntill_p1 + ggtitle('Legume CC + Ntill', '(p)')
+ccl_ntill_p1 = ccl_ntill_p1 + 
+  ggtitle('Legume CC + Ntill', '(p)') +
+  theme(plot.title    = element_text(size = 7),
+        plot.subtitle = element_text(size = 6))
 # continuous features
 # p2 
 ccl_ntill_p2  = cont_pdp(ccl_ntill_shv, as.character(ccl_ntill_gg$data$feature[2]),

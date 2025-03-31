@@ -85,7 +85,7 @@ add_l_weights    = function(dt, crop_dt) {
   ## ESTIMATE WEIGHTED STANDAR DEVIATION
 weighted_sd = function(values, weights) {
   
-  # Calculate weighted mean (using the previous method)
+  # Calculate weighted mean
   weighted_mean = sum(values * weights) / sum(weights)
   
   # Calculate weighted variance
@@ -96,7 +96,6 @@ weighted_sd = function(values, weights) {
   # Return standard deviation (square root of variance)
   return(sqrt(weighted_variance))
 }
-
   ## CREATE CROP AREA DT ##
 create_crop_dt = function(country.sf, crop_r) {
   country.sf_dt = setDT(as.data.frame(country.sf))

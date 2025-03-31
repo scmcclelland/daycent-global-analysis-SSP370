@@ -1,6 +1,6 @@
 # filename:    analysis-hectare.R
 # created:     06 March 2023
-# updated:     21 February 2025
+# updated:     29 March 2025
 # author:      S.C. McClelland
 # description: This file estimates cumulative weighted mean and standard error for soil
 #              GHG and crop yield responses from DayCent uncertainty and climate variance output,
@@ -47,7 +47,7 @@ rm(crop_r)
 # load(paste(data_p, 'ccg-res-ghg-flux-uncertainty.RData', sep = '/'))
 # load(paste(data_p, 'ccl-res-ghg-flux-uncertainty.RData', sep = '/'))
 # load(paste(data_p, 'ccg-ntill-ghg-flux-uncertainty.RData', sep = '/'))
-load(paste(data_p, 'ccl-ntill-ghg-flux-uncertainty.RData', sep = '/'))
+# load(paste(data_p, 'ccl-ntill-ghg-flux-uncertainty.RData', sep = '/'))
 
   ## drop absolute responses ##
 # d_ccg_res_dt   = d_ccg_res_dt[, -c('s_SOC', 's_dN2O', 's_iN2O', 's_N2O', 's_GHG')]
@@ -56,24 +56,24 @@ load(paste(data_p, 'ccl-ntill-ghg-flux-uncertainty.RData', sep = '/'))
 # gc()
 # d_ccg_ntill_dt = d_ccg_ntill_dt[, -c('s_SOC', 's_dN2O', 's_iN2O', 's_N2O', 's_GHG')]
 # gc()
-d_ccl_ntill_dt = d_ccl_ntill_dt[, -c('s_SOC', 's_dN2O', 's_iN2O', 's_N2O', 's_GHG')]
-gc()
+# d_ccl_ntill_dt = d_ccl_ntill_dt[, -c('s_SOC', 's_dN2O', 's_iN2O', 's_N2O', 's_GHG')]
+# gc()
 
   ## crop responses ##
 # load(paste(data_p, 'ccg-res-yield.RData', sep = '/'))
 # load(paste(data_p, 'ccl-res-yield.RData', sep = '/'))
 # load(paste(data_p, 'ccg-ntill-yield.RData', sep = '/'))
-# load(paste(data_p, 'ccl-ntill-yield.RData', sep = '/'))
+load(paste(data_p, 'ccl-ntill-yield.RData', sep = '/'))
 
-# # drop absolute responses
+# drop absolute responses
 # d_ccg_res_y_dt   = d_ccg_res_y_dt[, -c('s_cgrain')]
 # gc()
 # d_ccl_res_y_dt   = d_ccl_res_y_dt[, -c('s_cgrain')]
 # gc()
 # d_ccg_ntill_y_dt = d_ccg_ntill_y_dt[, -c('s_cgrain')]
 # gc()
-# d_ccl_ntill_y_dt = d_ccl_ntill_y_dt[, -c('s_cgrain')]
-# gc()
+d_ccl_ntill_y_dt = d_ccl_ntill_y_dt[, -c('s_cgrain')]
+gc()
 #-----------------------------------------------------------------------------------------
 # ADD REGION NAMES
 #-----------------------------------------------------------------------------------------
@@ -81,12 +81,43 @@ gc()
 # d_ccg_res_dt    = add_region(d_ccg_res_dt, main_table, ipcc_region_dt)
 # d_ccl_res_dt    = add_region(d_ccl_res_dt, main_table, ipcc_region_dt)
 # d_ccg_ntill_dt  = add_region(d_ccg_ntill_dt, main_table, ipcc_region_dt)
-d_ccl_ntill_dt  = add_region(d_ccl_ntill_dt, main_table, ipcc_region_dt)
+# d_ccl_ntill_dt  = add_region(d_ccl_ntill_dt, main_table, ipcc_region_dt)
 
 # d_ccg_res_y_dt    = add_region(d_ccg_res_y_dt, main_table, ipcc_region_dt)
 # d_ccl_res_y_dt    = add_region(d_ccl_res_y_dt, main_table, ipcc_region_dt)
 # d_ccg_ntill_y_dt  = add_region(d_ccg_ntill_y_dt, main_table, ipcc_region_dt)
-# d_ccl_ntill_y_dt  = add_region(d_ccl_ntill_y_dt, main_table, ipcc_region_dt)
+d_ccl_ntill_y_dt  = add_region(d_ccl_ntill_y_dt, main_table, ipcc_region_dt)
+
+# SAVE | GHG
+# fwrite(d_ccg_res_dt[!y_block == 2030, .(gridid, crop, irr, scenario,
+#                         y_block, rep, d_s_SOC, d_s_N2O,
+#                         d_s_GHG, IPCC_NAME)], 
+#        file = paste(out_p, 'ccg-res-hectare-ghg-all-uncertainty-responses.csv', sep = '/'))
+# fwrite(d_ccl_res_dt[!y_block == 2030, .(gridid, crop, irr, scenario,
+#                                         y_block, rep, d_s_SOC, d_s_N2O,
+#                                         d_s_GHG, IPCC_NAME)], 
+#        file = paste(out_p, 'ccl-res-hectare-ghg-all-uncertainty-responses.csv', sep = '/'))
+# fwrite(d_ccg_ntill_dt[!y_block == 2030, .(gridid, crop, irr, scenario,
+#                                         y_block, rep, d_s_SOC, d_s_N2O,
+#                                         d_s_GHG, IPCC_NAME)], 
+#        file = paste(out_p, 'ccg-ntill-hectare-ghg-all-uncertainty-responses.csv', sep = '/'))
+# fwrite(d_ccl_ntill_dt[!y_block == 2030, .(gridid, crop, irr, scenario,
+#                                           y_block, rep, d_s_SOC, d_s_N2O,
+#                                           d_s_GHG, IPCC_NAME)], 
+#        file = paste(out_p, 'ccl-ntill-hectare-ghg-all-uncertainty-responses.csv', sep = '/'))
+# SAVE | GHG
+# fwrite(d_ccg_res_y_dt[!y_block == 2030, .(gridid, crop, irr, scenario,
+#                         gcm, y_block, d_s_cgrain, IPCC_NAME)],
+#        file = paste(out_p, 'ccg-res-hectare-yield-all-gcm-responses.csv', sep = '/'))
+# fwrite(d_ccl_res_y_dt[!y_block == 2030, .(gridid, crop, irr, scenario,
+#                                           gcm, y_block, d_s_cgrain, IPCC_NAME)],
+#        file = paste(out_p, 'ccl-res-hectare-yield-all-gcm-responses.csv', sep = '/'))
+# fwrite(d_ccg_ntill_y_dt[!y_block == 2030, .(gridid, crop, irr, scenario,
+#                                           gcm, y_block, d_s_cgrain, IPCC_NAME)],
+#        file = paste(out_p, 'ccg-ntill-hectare-yield-all-gcm-responses.csv', sep = '/'))
+fwrite(d_ccl_ntill_y_dt[!y_block == 2030, .(gridid, crop, irr, scenario,
+                                            gcm, y_block, d_s_cgrain, IPCC_NAME)],
+       file = paste(out_p, 'ccl-ntill-hectare-yield-all-gcm-responses.csv', sep = '/'))
 #-----------------------------------------------------------------------------------------
 # ADD CROP AREA WEIGHTS
 #-----------------------------------------------------------------------------------------

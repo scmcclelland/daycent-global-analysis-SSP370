@@ -1,6 +1,6 @@
 # filename:    figures-extended-data.R
 # created:     19 December 2024
-# updated:     21 February 2025
+# updated:     31 March 2025
 # author:      S.C. McClelland
 # description: This file creates figures included in the extended data section of manuscript.
 #-----------------------------------------------------------------------------------------
@@ -75,9 +75,11 @@ ghg_2100 = ghg[y_block == 2100, lapply(.SD, function(x) {x/85}),
 # ccg-res
 ccg_res_ghg_map   = ghg_map_fig(ghg_2100[scenario %in% 'ccg-res'])
 ccg_res_ghg_map$GHG = ccg_res_ghg_map$GHG +
-  annotate("text", x = -Inf, y = Inf, label = "(a)", # top left
-           hjust = 0, vjust = 1, size = 3) +
-  ggtitle('Grass CC')
+  # annotate("text", x = -Inf, y = Inf, label = "(a)", # top left
+  #          hjust = 0, vjust = 1, size = 3) +
+  ggtitle('Grass CC', '(a)') +
+  theme(plot.title    = element_text(size = 7),
+        plot.subtitle = element_text(size = 6))
 ccg_res_ghg_map$legend1 = ccg_res_ghg_map$legend1 +
   theme(
     plot.margin = unit(c(-1, -0.5, -1, -0.5), "cm"),  # Adjust these values as needed
@@ -89,21 +91,27 @@ ccg_res_ghg_map$legend1 = ccg_res_ghg_map$legend1 +
 # ccl-res
 ccl_res_ghg_map   = ghg_map_fig(ghg_2100[scenario %in% 'ccl-res'])
 ccl_res_ghg_map$GHG = ccl_res_ghg_map$GHG +
-  annotate("text", x = -Inf, y = Inf, label = "(e)", # top left
-           hjust = 0, vjust = 1, size = 3) +
-  ggtitle('Legume CC')
+  # annotate("text", x = -Inf, y = Inf, label = "(e)", # top left
+  #          hjust = 0, vjust = 1, size = 3) +
+  ggtitle('Legume CC', '(e)') +
+  theme(plot.title    = element_text(size = 7),
+        plot.subtitle = element_text(size = 6))
 # ccg-ntill
 ccg_ntill_ghg_map = ghg_map_fig(ghg_2100[scenario %in% 'ccg-ntill'])
 ccg_ntill_ghg_map$GHG = ccg_ntill_ghg_map$GHG +
-  annotate("text", x = -Inf, y = Inf, label = "(c)", # top left
-           hjust = 0, vjust = 1, size = 3) +
-  ggtitle('Grass CC + Ntill')
+  # annotate("text", x = -Inf, y = Inf, label = "(c)", # top left
+  #          hjust = 0, vjust = 1, size = 3) +
+  ggtitle('Grass CC + Ntill', '(c)') +
+  theme(plot.title    = element_text(size = 7),
+        plot.subtitle = element_text(size = 6))
 # ccl-ntill
 ccl_ntill_ghg_map = ghg_map_fig(ghg_2100[scenario %in% 'ccl-ntill'])
 ccl_ntill_ghg_map$GHG = ccl_ntill_ghg_map$GHG +
-  annotate("text", x = -Inf, y = Inf, label = "(g)", # top left
-           hjust = 0, vjust = 1, size = 3) +
-  ggtitle('Legume CC + Ntill')
+  # annotate("text", x = -Inf, y = Inf, label = "(g)", # top left
+  #          hjust = 0, vjust = 1, size = 3) +
+  ggtitle('Legume CC + Ntill', '(g)') +
+  theme(plot.title    = element_text(size = 7),
+        plot.subtitle = element_text(size = 6))
 
 # YIELD
 # load data | N.B. does not include imputed values 
@@ -131,8 +139,10 @@ yield_2100 = yield[y_block == 2100, lapply(.SD, function(x) {x/85}),
 # ccg-res
 ccg_res_y_map     = yield_map_fig(yield_2100[scenario %in% 'ccg-res'])
 ccg_res_y_map$grain = ccg_res_y_map$grain +
-  annotate("text", x = -Inf, y = Inf, label = "(b)", # top left
-           hjust = 0, vjust = 1, size = 3) 
+  # annotate("text", x = -Inf, y = Inf, label = "(b)", # top left
+  #          hjust = 0, vjust = 1, size = 3) +
+  ggtitle('', '(b)') +
+  theme(plot.subtitle = element_text(size = 6))
 ccg_res_y_map$legend2 = ccg_res_y_map$legend2 +
   theme(
     plot.margin = unit(c(-1, -0.5, -1, -0.5), "cm"),  # Adjust these values as needed
@@ -144,18 +154,24 @@ ccg_res_y_map$legend2 = ccg_res_y_map$legend2 +
 # ccl-res
 ccl_res_y_map     = yield_map_fig(yield_2100[scenario %in% 'ccl-res'])
 ccl_res_y_map$grain = ccl_res_y_map$grain +
-  annotate("text", x = -Inf, y = Inf, label = "(f)", # top left
-           hjust = 0, vjust = 1, size = 3) 
+  # annotate("text", x = -Inf, y = Inf, label = "(f)", # top left
+  #          hjust = 0, vjust = 1, size = 3) 
+  ggtitle('', '(f)') +
+  theme(plot.subtitle = element_text(size = 6))
 # ccg-ntill
 ccg_ntill_y_map   = yield_map_fig(yield_2100[scenario %in% 'ccg-ntill'])
 ccg_ntill_y_map$grain = ccg_ntill_y_map$grain +
-  annotate("text", x = -Inf, y = Inf, label = "(d)", # top left
-           hjust = 0, vjust = 1, size = 3)
+  # annotate("text", x = -Inf, y = Inf, label = "(d)", # top left
+  #          hjust = 0, vjust = 1, size = 3)
+  ggtitle('', '(d)') +
+  theme(plot.subtitle = element_text(size = 6))
 # ccl-ntill
 ccl_ntill_y_map   = yield_map_fig(yield_2100[scenario %in% 'ccl-ntill'])
 ccl_ntill_y_map$grain = ccl_ntill_y_map$grain +
-  annotate("text", x = -Inf, y = Inf, label = "(h)", # top left
-           hjust = 0, vjust = 1, size = 3)
+  # annotate("text", x = -Inf, y = Inf, label = "(h)", # top left
+  #          hjust = 0, vjust = 1, size = 3)
+  ggtitle('', '(h)') +
+  theme(plot.subtitle = element_text(size = 6))
 
 # Multi-panel figure
 fig1_maps = ccg_res_ghg_map$GHG + ccg_res_y_map$grain + 
@@ -168,8 +184,196 @@ fig1_maps = ccg_res_ghg_map$GHG + ccg_res_y_map$grain +
 
 # Save
 ggsave(paste(out_p, 'figure1-ext.pdf', sep = '/'), fig1_maps,  units = 'mm', width = 180, height = 210, device='pdf', dpi=300)
+ggsave(paste(out_p, 'figure1-ext.jpg', sep = '/'), fig1_maps,  units = 'mm', width = 180, height = 210, device='jpg', dpi=300)
+#------------------------------------------------------------------------------------
+# Figure 2 and 3. Bivariate maps | Short- and Medium-term
 #-----------------------------------------------------------------------------------------
-# Figure 2. Two-panel scatterplot | Balancing outcomes global potential
+# load data | N.B. does not include imputed values
+# GHG
+ghg_ccg_res   = fread(paste(data_p, 'ccg-res-weighted-gridid-ghg-responses.csv', sep = '/'))
+ghg_ccl_res   = fread(paste(data_p, 'ccl-res-weighted-gridid-ghg-responses.csv', sep = '/'))
+ghg_ccg_ntill = fread(paste(data_p, 'ccg-ntill-weighted-gridid-ghg-responses.csv', sep = '/'))
+ghg_ccl_ntill = fread(paste(data_p, 'ccl-ntill-weighted-gridid-ghg-responses.csv', sep = '/'))
+
+# combine
+ghg = rbind(ghg_ccg_res, ghg_ccl_res, ghg_ccg_ntill, ghg_ccl_ntill)
+rm(ghg_ccg_res, ghg_ccl_res, ghg_ccg_ntill, ghg_ccl_ntill)
+
+# flip signs for ghg
+ghg = ghg[, d_s_SOC := ifelse(d_s_SOC < 0, d_s_SOC*-1, d_s_SOC*-1)]
+ghg = ghg[, d_s_N2O := ifelse(d_s_N2O < 0, d_s_N2O*-1, d_s_N2O*-1)]
+ghg = ghg[, d_s_GHG := ifelse(d_s_GHG < 0, d_s_GHG*-1, d_s_GHG*-1)]
+ghg = ghg[, -c('sd_s_SOC', 'sd_s_N2O', 'sd_s_GHG')]
+
+# add xy coordinates
+## input table ##
+load(paste(input_p, 'input_table_by_gridid_crop_irr.RData', sep = '/'))
+# keep coordinates
+main_table      = main_table[, c('gridid', 'x', 'y')]
+main_table      = unique(main_table)
+# join
+ghg = ghg[main_table, on = .(gridid = gridid)]
+ghg = ghg[!is.na(scenario)]
+
+# YIELD
+# load data | N.B. does not include imputed values 
+yield_ccg_res   = fread(paste(data_p, 'ccg-res-weighted-gridid-yield-responses.csv', sep = '/'))
+yield_ccl_res   = fread(paste(data_p, 'ccl-res-weighted-gridid-yield-responses.csv', sep = '/'))
+yield_ccg_ntill = fread(paste(data_p, 'ccg-ntill-weighted-gridid-yield-responses.csv', sep = '/'))
+yield_ccl_ntill = fread(paste(data_p, 'ccl-ntill-weighted-gridid-yield-responses.csv', sep = '/'))
+
+# combine
+yield = rbind(yield_ccg_res, yield_ccl_res, yield_ccg_ntill, yield_ccl_ntill)
+rm(yield_ccg_res, yield_ccl_res, yield_ccg_ntill, yield_ccl_ntill)
+
+yield = yield[, -c('sd_s_cgrain')]
+
+# add xy coordinates
+# join
+yield = yield[main_table, on = .(gridid = gridid)]
+yield = yield[!is.na(scenario)]
+
+# short-term (2016-2050)
+# make annual, Mg CO2-eq ha-1 yr-1
+ghg_2050 = ghg[y_block == 2050, lapply(.SD, function(x) {x/35}), 
+               .SDcols = c('d_s_SOC', 'd_s_N2O','d_s_GHG'),
+               by = .(scenario, y_block, gridid)]
+# make annual, Mg ha-1 yr-1
+yield_2050 = yield[y_block == 2050, lapply(.SD, function(x) {x/35}), 
+                   .SDcols = c('d_s_cgrain'),
+                   by = .(scenario, y_block, gridid)]
+
+# JOIN
+ghg_yield_2050 = ghg_2050[yield_2050, on = .(scenario  = scenario,
+                                             y_block   = y_block,
+                                             gridid    = gridid)]
+# ccg-res
+bv_ccg_res_2050 = bivariate_map_fig(ghg_yield_2050[scenario == 'ccg-res'])
+bv_ccg_res_2050$bivariate = bv_ccg_res_2050$bivariate +
+  # annotate("text", x = -Inf, y = Inf, label = "(a)", # top left
+  #          hjust = 0, vjust = 1, size = 3) +
+  ggtitle('Grass CC', '(a)') +
+  theme(plot.title    = element_text(size = 7),
+        plot.subtitle = element_text(size = 6))
+bv_ccg_res_2050$legend = bv_ccg_res_2050$legend +
+  theme(
+    # axis.text.y = element_text(angle = 90, size = 6, hjust = 0.5),
+    plot.margin = unit(c(-0.25, -1, 0, -1), "cm"),  # Adjust these values as needed
+    # Negative values will reduce the padding
+    # Format is (top, right, bottom, left)
+  )
+# ccg-ntill
+bv_ccg_ntill_2050 = bivariate_map_fig(ghg_yield_2050[scenario == 'ccg-ntill'])
+bv_ccg_ntill_2050$bivariate = bv_ccg_ntill_2050$bivariate +
+  # annotate("text", x = -Inf, y = Inf, label = "(c)", # top left
+  #          hjust = 0, vjust = 1, size = 3) +
+  ggtitle('Grass CC + Ntill', '(b)') +
+  theme(plot.title    = element_text(size = 7),
+        plot.subtitle = element_text(size = 6))
+# ccl-res
+bv_ccl_res_2050 = bivariate_map_fig(ghg_yield_2050[scenario == 'ccl-res'])
+bv_ccl_res_2050$bivariate = bv_ccl_res_2050$bivariate +
+  # annotate("text", x = -Inf, y = Inf, label = "(e)", # top left
+  #          hjust = 0, vjust = 1, size = 3) +
+  ggtitle('Legume CC', '(c)') +
+  theme(plot.title    = element_text(size = 7),
+        plot.subtitle = element_text(size = 6))
+#ccl-ntill
+bv_ccl_ntill_2050 = bivariate_map_fig(ghg_yield_2050[scenario == 'ccl-ntill'])
+bv_ccl_ntill_2050$bivariate = bv_ccl_ntill_2050$bivariate +
+  # annotate("text", x = -Inf, y = Inf, label = "(g)", # top left
+  #          hjust = 0, vjust = 1, size = 3) +
+  ggtitle('Legume CC + Ntill', '(d)') +
+  theme(plot.title    = element_text(size = 7),
+        plot.subtitle = element_text(size = 6))
+
+# medium-term (2016-2100)
+# make annual, Mg CO2-eq ha-1 yr-1
+ghg_2100 = ghg[y_block == 2100, lapply(.SD, function(x) {x/85}), 
+               .SDcols = c('d_s_SOC', 'd_s_N2O','d_s_GHG'),
+               by = .(scenario, y_block, gridid)]
+# make annual, Mg ha-1 yr-1
+yield_2100 = yield[y_block == 2100, lapply(.SD, function(x) {x/85}), 
+                   .SDcols = c('d_s_cgrain'),
+                   by = .(scenario, y_block, gridid)]
+
+# JOIN
+ghg_yield_2100 = ghg_2100[yield_2100, on = .(scenario  = scenario,
+                                             y_block   = y_block,
+                                             gridid    = gridid)]
+# ccg-res
+bv_ccg_res_2100 = bivariate_map_fig(ghg_yield_2100[scenario == 'ccg-res'])
+bv_ccg_res_2100$bivariate = bv_ccg_res_2100$bivariate +
+  # annotate("text", x = -Inf, y = Inf, label = "(b)", # top left
+  #          hjust = 0, vjust = 1, size = 3) +
+  ggtitle('Grass CC', '(a)') +
+  theme(plot.title    = element_text(size = 7),
+        plot.subtitle = element_text(size = 6))
+# ccg-ntill
+bv_ccg_ntill_2100 = bivariate_map_fig(ghg_yield_2100[scenario == 'ccg-ntill'])
+bv_ccg_ntill_2100$bivariate = bv_ccg_ntill_2100$bivariate +
+  # annotate("text", x = -Inf, y = Inf, label = "(d)", # top left
+  #          hjust = 0, vjust = 1, size = 3) +
+  ggtitle('Grass CC + Ntill', '(b)') +
+  theme(plot.title    = element_text(size = 7),
+        plot.subtitle = element_text(size = 6))
+# ccl-res
+bv_ccl_res_2100 = bivariate_map_fig(ghg_yield_2100[scenario == 'ccl-res'])
+bv_ccl_res_2100$bivariate = bv_ccl_res_2100$bivariate +
+  # annotate("text", x = -Inf, y = Inf, label = "(f)", # top left
+  #          hjust = 0, vjust = 1, size = 3) +
+  ggtitle('Legume CC', '(c)') +
+  theme(plot.title    = element_text(size = 7),
+        plot.subtitle = element_text(size = 6))
+#ccl-ntill
+bv_ccl_ntill_2100 = bivariate_map_fig(ghg_yield_2100[scenario == 'ccl-ntill'])
+bv_ccl_ntill_2100$bivariate = bv_ccl_ntill_2100$bivariate +
+  # annotate("text", x = -Inf, y = Inf, label = "(h)", # top left
+  #          hjust = 0, vjust = 1, size = 3) +
+  ggtitle('Legume CC + Ntill', '(d)') +
+  theme(plot.title    = element_text(size = 7),
+        plot.subtitle = element_text(size = 6))
+
+# PLOT
+fig2_maps = bv_ccg_res_2050$bivariate +  bv_ccg_ntill_2050$bivariate + plot_spacer() +
+            bv_ccl_res_2050$bivariate +  bv_ccl_ntill_2050$bivariate + plot_spacer() +
+            plot_layout(ncol = 3, 
+            widths = c(0.4,0.4, 0.2),
+            guides = 'collect') &
+  theme(legend.position = 'none')
+fig2_maps = ggdraw() +
+  draw_plot(fig2_maps) +
+  draw_plot(bv_ccg_res_2050$legend,
+            x = 0.7,   # x position of the inset
+            y = 0.27,   # y position of the inset
+            width = 0.3,  # width of the inset
+            height = 0.3  # height of the inset
+  )
+fig2_maps
+
+fig3_maps = bv_ccg_res_2100$bivariate +  bv_ccg_ntill_2100$bivariate + plot_spacer() +
+            bv_ccl_res_2100$bivariate +  bv_ccl_ntill_2100$bivariate +  plot_spacer() +
+            plot_layout(ncol = 3, 
+                        widths = c(0.4,0.4, 0.2),
+                        guides = 'collect') &
+            theme(legend.position = 'none')
+fig3_maps = ggdraw() +
+  draw_plot(fig3_maps) +
+  draw_plot(bv_ccg_res_2050$legend,
+            x = 0.7,   # x position of the inset
+            y = 0.27,   # y position of the inset
+            width = 0.3,  # width of the inset
+            height = 0.3  # height of the inset
+  )
+fig3_maps
+
+# Save
+ggsave(paste(out_p, 'figure2-ext.pdf', sep = '/'), fig2_maps,  units = 'mm', width = 180, height = 90, device='pdf', dpi=300)
+ggsave(paste(out_p, 'figure2-ext.tiff', sep = '/'), fig2_maps,  units = 'mm', width = 180, height = 90, device='tiff', dpi=300)
+ggsave(paste(out_p, 'figure3-ext.pdf', sep = '/'), fig3_maps,  units = 'mm', width = 180, height = 90, device='pdf', dpi=300)
+ggsave(paste(out_p, 'figure3-ext.tiff', sep = '/'), fig3_maps,  units = 'mm', width = 180, height = 90, device='tiff', dpi=300)
+#-----------------------------------------------------------------------------------------
+# Figure 4. Two-panel scatterplot | Balancing outcomes global potential
 #-----------------------------------------------------------------------------------------
 # GHG
 max_ghg_dt        = fread(paste(data_p, 'balanced-outcomes-max-ghg-no-yield-mitigation-potential.csv', sep = '/'))
@@ -224,11 +428,11 @@ bmp_2100 = bmp_dt[y_block == 2100, lapply(.SD, function(x) {x/85}),
 Mg_t_Pg = 1e9
 
 # plot
-fig2_t = bmp_scatterplot_fig(bmp_2050, Mg_t_Pg)
-fig2_b = bmp_scatterplot_fig(bmp_2100, Mg_t_Pg)
+fig4_t = bmp_scatterplot_fig(bmp_2050, Mg_t_Pg)
+fig4_b = bmp_scatterplot_fig(bmp_2100, Mg_t_Pg)
 # plot adjustments
 # update legends, axes, and add labels to corners
-fig2_t = fig2_t + 
+fig4_t = fig4_t + 
   # Top left
   annotate("text", x = -0.5, y = 0.5, label = "Yield-favorable", 
            hjust = 0, vjust = 1, size = 2.5) +
@@ -245,16 +449,21 @@ fig2_t = fig2_t +
   annotate("text", x = 1.25, y = -0.25, label = "Mitigation-favorable", 
            hjust = 1, vjust = 0, size = 2.5)
 # add a label
-fig2_t = fig2_t + theme(
+fig4_t = fig4_t + theme(
   plot.title.position = "plot",  # This moves the title to align with plot edge
   plot.title = element_text(
     hjust = -0.01,  # Slight adjustment left of the plot
     vjust = -0.5,   # Slight adjustment above the plot
-    size = 9       # Match your other text size if needed
+    size = 7       # Match your other text size if needed
+  ),
+  plot.subtitle = element_text(
+    hjust = -0.01,  # Slight adjustment left of the plot
+    vjust = -0.5,   # Slight adjustment above the plot
+    size = 6       # Match your other text size if needed
   )
 ) +
   ggtitle('Global, near-term (2016-2050)', '(a)')
-fig2_b = fig2_b + 
+fig4_b = fig4_b + 
   # Top left
   annotate("text", x = -0.5, y = 0.5, label = "Yield-favorable", 
            hjust = 0, vjust = 1, size = 2.5) +
@@ -271,27 +480,32 @@ fig2_b = fig2_b +
   annotate("text", x = 1.25, y = -0.25, label = "Mitigation-favorable", 
            hjust = 1, vjust = 0, size = 2.5)
 # add b label
-fig2_b = fig2_b + theme(
+fig4_b = fig4_b + theme(
   plot.title.position = "plot",  # This moves the title to align with plot edge
   plot.title = element_text(
     hjust = -0.01,  # Slight adjustment left of the plot
     vjust = -0.5,   # Slight adjustment above the plot
-    size = 9       # Match your other text size if needed
+    size = 7       # Match your other text size if needed
+  ),
+  plot.subtitle = element_text(
+    hjust = -0.01,  # Slight adjustment left of the plot
+    vjust = -0.5,   # Slight adjustment above the plot
+    size = 6       # Match your other text size if needed
   )
 ) +
   ggtitle('Global, medium-term (2016-2100)', '(b)')
-color_legend = get_legend(fig2_b)
+color_legend = get_legend(fig4_b)
 plot(color_legend)
-fig2_t = fig2_t + theme(legend.position = 'none')
-fig2_b = fig2_b + theme(legend.position = 'none')
+fig4_t = fig4_t + theme(legend.position = 'none')
+fig4_b = fig4_b + theme(legend.position = 'none')
 # combine
-fig2_final = grid.arrange(fig2_t, color_legend, fig2_b, ncol = 2, nrow = 2,
+fig4_final = grid.arrange(fig4_t, color_legend, fig4_b, ncol = 2, nrow = 2,
                           heights = c(2,2), widths = c(2,1))
-
 # save
-ggsave(paste(out_p, 'figure2-ext.pdf', sep = '/'), fig2_final, units = 'mm', width = 180, height = 185, device='pdf', dpi=300)
+ggsave(paste(out_p, 'figure4-ext.pdf', sep = '/'), fig4_final, units = 'mm', width = 180, height = 185, device='pdf', dpi=300)
+ggsave(paste(out_p, 'figure4-ext.jpg', sep = '/'), fig4_final, units = 'mm', width = 180, height = 185, device='jpg', dpi=300)
 #-----------------------------------------------------------------------------------------
-# Figure 3. Recommended practices by region (Yield focus)
+# Figure 5. Recommended practices by region (Yield focus)
 #-----------------------------------------------------------------------------------------
 # N.B. these plots are used in a pptx file to create the final figure
 # load data
@@ -337,8 +551,8 @@ max_yield_gc_2100_map$bmp = max_yield_gc_2100_map$bmp + theme(
 #   # Format is (top, right, bottom, left)
 # )
 # Save
-ggsave(paste(out_p, 'figure3-near.pdf', sep = '/'), max_yield_gc_2050_map$bmp,    units = 'mm', width = 60, height = 30, device='pdf', dpi=300)
-ggsave(paste(out_p, 'figure3-medium.pdf', sep = '/'), max_yield_gc_2100_map$bmp,  units = 'mm', width = 60, height = 30, device='pdf', dpi=300)
+ggsave(paste(out_p, 'figure5-near.pdf', sep = '/'), max_yield_gc_2050_map$bmp,    units = 'mm', width = 60, height = 30, device='pdf', dpi=300)
+ggsave(paste(out_p, 'figure5-medium.pdf', sep = '/'), max_yield_gc_2100_map$bmp,  units = 'mm', width = 60, height = 30, device='pdf', dpi=300)
 # ggsave(paste(out_p, 'figure3-map.pdf', sep = '/'), background_map$IPCC, bg = 'transparent', units = 'mm', width = 180, height = 160, device='pdf', dpi=500)
 
 # Estimate cropland area % by region, scenario
