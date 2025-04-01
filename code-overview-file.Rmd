@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Code Overview
 
-This file describes the code and how to execute scripts for the study, "Finding opportunities to meet both climate change mitigation and production goals in croplands."
+This file describes the code and how to execute scripts for the study, "Soil, emissions, and yield: Managing for climate and production goals on croplands"
 
 It is recommended to execute scripts in the sequence described below. Due to the large data size, many of these scripts need to be run individually, with some modifications by the user. These modifications are described in each script.
 
