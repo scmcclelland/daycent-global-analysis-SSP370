@@ -1,4 +1,4 @@
-Code for analyses and figures in "Soil, emissions, and yield: Managing for climate and production goals on croplands".
+Code for analyses and figures in "Managing for climate and production goals on croplands".
 Please refer to 'code-overview-file.Rmd' to navigate /r and scripts. This file is necessary to correctly set-up the R project. 
 
 All data are available from Zenodo.
