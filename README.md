@@ -4,10 +4,13 @@ Please refer to 'code-overview-file.Rmd' to navigate /r and scripts. This file i
 All data are available from Zenodo.
 
 Initial DayCent Simulations: 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.14914314.svg)](https://doi.org/10.5281/zenodo.14914314)
 
-Uncertainty output:
+Uncertainty output: 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.15116883.svg)](https://doi.org/10.5281/zenodo.15116883)
 
 Analysis: 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.15319658.svg)](https://doi.org/10.5281/zenodo.15319658)
 
 This repo is associated with a Zenodo DOI:
 
