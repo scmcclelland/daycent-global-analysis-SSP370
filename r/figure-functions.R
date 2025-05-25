@@ -357,7 +357,7 @@ cont_pdp = function(shv, sv_imp, color_hex, ft_name, shv_name, lbl) {
   
   # for categorical
   cont_gg = ggplot(df, aes(x = feature_value, y = shap_value)) +
-  geom_point(alpha = 0.7, color = color_hex, size = 1) +
+  geom_point_rast(alpha = 0.7, color = color_hex, size = 1) +
   # Modify with loess  fit (calculation takes some time when returning plot)
   geom_smooth(
     method = "loess",  # or method = "gam" for larger datasets
@@ -389,7 +389,7 @@ cat_pdp  = function(shv, sv_imp, color_hex, ft_name, shv_name, lbl) {
 
   # for categorical
 cat_gg = ggplot(df, aes(x = feature_value, y = shap_value)) +
-    geom_point(alpha = 0.7, color = color_hex, size = 1) +
+    geom_point_rast(alpha = 0.7, color = color_hex, size = 1) +
     stat_summary(
       geom = "point",
       fun = mean,

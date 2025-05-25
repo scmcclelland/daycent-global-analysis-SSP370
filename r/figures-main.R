@@ -1,6 +1,6 @@
 # filename: figures-main.R
 # created:     19 December 2024
-# updated:     30 March 2025
+# updated:     17 April 2025
 # author:      S.C. McClelland
 # description: This file creates figures included in the main manuscript.
 #-----------------------------------------------------------------------------------------
@@ -11,11 +11,13 @@ library(cowplot)
 library(data.table)
 library(ggplot2)
 library(ggpubr)
+library(ggrastr)
 library(ggthemes)
 library(grid)
 library(gridtext)
 library(gridExtra)
 library(maptools)
+library(ragg)
 library(RColorBrewer)
 library(rstudioapi)
 library(patchwork)
@@ -708,7 +710,7 @@ grid_p = ggarrange(ccg_res_p1, ccg_res_p2, ccg_res_p3, ccg_res_p4, ccg_res_p5,
                       ncol=5, nrow=4)
 grid_p
 # save
-ggsave(paste(out_p, 'figure4-main.pdf', sep = '/'), grid_p, units = 'mm', width = 180, height = 180, device='pdf', dpi=300)
+ggsave(paste(out_p, 'figure4-main.pdf', sep = '/'), grid_p, units = 'mm', width = 180, height = 180, device=cairo_pdf, dpi=300)
 #-----------------------------------------------------------------------------------------
 # Figure 5. Recommended practices by region (GHG focus)
 #-----------------------------------------------------------------------------------------
